@@ -14,6 +14,7 @@ function PortalLayout() {
   const logout = usePortalStore((state) => state.logout)
   const initializeFirestore = usePortalStore((state) => state.initializeFirestore)
   const currentUser = usePortalStore((state) => state.currentUser)
+  const firestoreError = usePortalStore((state) => state.firestoreError)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -60,6 +61,11 @@ function PortalLayout() {
           </button>
         </header>
         <main className="p-6">
+          {firestoreError ? (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {firestoreError}
+            </div>
+          ) : null}
           <Outlet />
         </main>
       </div>

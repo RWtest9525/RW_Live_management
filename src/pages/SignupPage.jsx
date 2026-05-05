@@ -75,10 +75,8 @@ function SignupPage() {
               onChange={(e) => update('password', e.target.value)}
               required
             />
-            <button type="button" onClick={() => setShowPassword((v) => !v)} className="rounded-lg bg-slate-700 px-3 text-sm text-white">
-              <span className="text-lg" aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                {showPassword ? '🙈' : '👁️'}
-              </span>
+            <button type="button" onClick={() => setShowPassword((value) => !value)} className="rounded-lg bg-slate-700 px-3 text-sm text-white">
+              {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
           <div className="flex gap-2">
@@ -90,10 +88,8 @@ function SignupPage() {
               onChange={(e) => update('confirmPassword', e.target.value)}
               required
             />
-            <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="rounded-lg bg-slate-700 px-3 text-sm text-white">
-              <span className="text-lg" aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>
-                {showConfirmPassword ? '🙈' : '👁️'}
-              </span>
+            <button type="button" onClick={() => setShowConfirmPassword((value) => !value)} className="rounded-lg bg-slate-700 px-3 text-sm text-white">
+              {showConfirmPassword ? 'Hide' : 'Show'}
             </button>
           </div>
         </div>
@@ -105,9 +101,9 @@ function SignupPage() {
             onChange={(e) => update('acceptedTerms', e.target.checked)}
           />
           I have read all{' '}
-          <a className="text-blue-400 underline" href="/terms-and-conditions" target="_blank" rel="noreferrer">
+          <Link className="text-blue-400 underline" to="/terms-and-conditions">
             Terms and Conditions
-          </a>
+          </Link>
         </label>
 
         <button

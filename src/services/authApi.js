@@ -16,6 +16,12 @@ const parseApiPayload = async (response) => {
     return JSON.parse(raw)
   } catch {
     const trimmed = raw.trim()
+    const isHtmlResponse = trimmed.startsWith('<!doctype') || trimmed.startsWith('<html')
+    if (isHtmlResponse) {
+      throw new Error(
+        'API endpoint is not available. If you are running locally, start the backend with Vercel or deploy the API first.',
+      )
+    }
     throw new Error(
       trimmed || `Server returned ${response.status} ${response.statusText}`,
     )

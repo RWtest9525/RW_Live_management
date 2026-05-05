@@ -44,6 +44,7 @@ const usePortalStore = create((set, get) => ({
   isAuthenticated: false,
   authLoading: false,
   authError: '',
+  firestoreError: '',
   token: '',
   currentUser: null,
   apps: mockApps,
@@ -63,18 +64,33 @@ const usePortalStore = create((set, get) => ({
         token: response.token,
         currentUser: response.user,
         authLoading: false,
+        authError: '',
       })
-      await get().initializeFirestore()
+      try {
+        await get().initializeFirestore()
+      } catch (error) {
+        set({
+          firestoreError:
+            error.message ??
+            'Login succeeded, but app data could not be loaded from Firestore.',
+        })
+      }
       return { ok: true }
     } catch (error) {
-      set({ authLoading: false, authError: error.message, isAuthenticated: false })
+      set({
+        authLoading: false,
+        authError: error.message,
+        isAuthenticated: false,
+        currentUser: null,
+        token: '',
+      })
       return { ok: false, error: error.message }
     }
   },
   hydrateSession: async () => {
     const token = getStoredToken()
     if (!token) return
-    set({ authLoading: true })
+    set({ authLoading: true, authError: '' })
     try {
       const response = await meRequest(token)
       set({
@@ -82,8 +98,17 @@ const usePortalStore = create((set, get) => ({
         token,
         currentUser: response.user,
         authLoading: false,
+        authError: '',
       })
-      await get().initializeFirestore()
+      try {
+        await get().initializeFirestore()
+      } catch (error) {
+        set({
+          firestoreError:
+            error.message ??
+            'Session restored, but app data could not be loaded from Firestore.',
+        })
+      }
     } catch {
       clearToken()
       set({
@@ -91,6 +116,8 @@ const usePortalStore = create((set, get) => ({
         token: '',
         currentUser: null,
         authLoading: false,
+        authError: '',
+        firestoreError: '',
       })
     }
   },
@@ -102,11 +129,14 @@ const usePortalStore = create((set, get) => ({
       isAuthenticated: false,
       token: '',
       currentUser: null,
+      authError: '',
+      firestoreError: '',
       subscriptionsReady: false,
       apps: [],
       reviews: [],
       proofs: [],
       users: [],
+      _firestoreUnsubs: [],
     })
   },
   initializeFirestore: async () => {
@@ -135,7 +165,11 @@ const usePortalStore = create((set, get) => ({
     if (isAdmin) {
       unsubs.push(subscribeUsers((users) => set({ users })))
     }
-    set({ subscriptionsReady: true, _firestoreUnsubs: unsubs })
+    set({
+      subscriptionsReady: true,
+      _firestoreUnsubs: unsubs,
+      firestoreError: '',
+    })
   },
   setRatePerReview: async (appId, nextRate) => {
     const parsedRate = Number(nextRate)

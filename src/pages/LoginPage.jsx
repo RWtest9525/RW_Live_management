@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import usePortalStore from '../store/usePortalStore'
 
 function LoginPage() {
@@ -10,7 +10,9 @@ function LoginPage() {
   const isAuthenticated = usePortalStore((state) => state.isAuthenticated)
   const authLoading = usePortalStore((state) => state.authLoading)
   const authError = usePortalStore((state) => state.authError)
+  const location = useLocation()
   const navigate = useNavigate()
+  const redirectTo = location.state?.from?.pathname ?? '/dashboard'
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />
@@ -20,14 +22,20 @@ function LoginPage() {
     event.preventDefault()
     if (!email || !password) return
     const result = await login({ email, password })
-    if (result.ok) navigate('/dashboard')
+    if (result.ok) navigate(redirectTo, { replace: true })
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-xl">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-xl"
+      >
         <h1 className="text-2xl font-bold text-white">Review World Login</h1>
         <p className="mt-1 text-sm text-slate-400">Secure access to business dashboard</p>
+        <p className="mt-2 text-xs text-slate-500">
+          If you are testing locally, make sure the API backend is running too.
+        </p>
         <div className="mt-5 space-y-3">
           <input
             type="email"
@@ -47,14 +55,17 @@ function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((value) => !value)}
-              className="rounded-lg bg-slate-700 px-3 text-lg text-white"
+              className="rounded-lg bg-slate-700 px-3 text-sm text-white"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
-              {showPassword ? '🙈' : '👁️'}
+              {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
         </div>
-        <button type="submit" className="mt-5 w-full rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-500">
+        <button
+          type="submit"
+          className="mt-5 w-full rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-500"
+        >
           {authLoading ? 'Logging in...' : 'Login to Dashboard'}
         </button>
         {authError ? <p className="mt-3 text-sm text-rose-400">{authError}</p> : null}

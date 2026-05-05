@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 function TermsPage() {
   return (
     <div className="min-h-screen bg-slate-950 p-6 text-slate-100">
@@ -22,7 +24,7 @@ function TermsPage() {
           <section>
             <h2 className="mb-2 text-xl font-semibold text-blue-400">3. Usage Policy</h2>
             <p>
-              Review World provides automation and monitoring tools for application reviews. You agree to use these tools legally and ethically. Misuse of platform automation, including attempts to bypass security or interfere with other users' data, may lead to immediate suspension.
+              Review World provides automation and monitoring tools for application reviews. You agree to use these tools legally and ethically. Misuse of platform automation, including attempts to bypass security or interfere with other users&apos; data, may lead to immediate suspension.
             </p>
           </section>
 
@@ -43,7 +45,7 @@ function TermsPage() {
           <section>
             <h2 className="mb-2 text-xl font-semibold text-blue-400">6. Limitation of Liability</h2>
             <p>
-              Review World is provided "as is" without warranties of any kind. We are not liable for any direct, indirect, or incidental damages arising from your use of the platform.
+              Review World is provided &quot;as is&quot; without warranties of any kind. We are not liable for any direct, indirect, or incidental damages arising from your use of the platform.
             </p>
           </section>
 
@@ -56,15 +58,13 @@ function TermsPage() {
         </div>
 
         <div className="mt-8 border-t border-slate-700 pt-6 text-center">
-          <p className="text-sm text-slate-400">
-            Last Updated: May 5, 2026
-          </p>
-          <button
-            onClick={() => window.close()}
-            className="mt-4 rounded-lg bg-slate-800 px-6 py-2 font-medium text-white transition hover:bg-slate-700"
+          <p className="text-sm text-slate-400">Last Updated: May 5, 2026</p>
+          <Link
+            to="/signup"
+            className="mt-4 inline-flex rounded-lg bg-slate-800 px-6 py-2 font-medium text-white transition hover:bg-slate-700"
           >
-            Close Window
-          </button>
+            Back to Signup
+          </Link>
         </div>
       </div>
     </div>
