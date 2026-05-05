@@ -12,6 +12,7 @@
     "worker:once": "node workers/automationWorker.js --run-once"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "firebase": "^12.12.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

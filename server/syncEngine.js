@@ -72,6 +72,7 @@ export const syncAppReviews = async ({
   targetDate,
   selectedHint = ',',
   hintMode = 'hint-wise',
+  ownerUserId = null,
 }) => {
   const fetchedReviews = await fetchAllReviews({ packageId, targetDate })
   const filteredReviews = fetchedReviews.filter((review) =>
@@ -108,6 +109,7 @@ export const syncAppReviews = async ({
       date: review.date ? new Date(review.date) : new Date(),
       status: 'VERIFIED LIVE',
       hintCategory: hintMode === 'hint-wise' ? `HINT:${selectedHint}` : 'NO_HINT',
+      ownerUserId,
       reviewKey,
       updatedAt: FieldValue.serverTimestamp(),
     }
@@ -137,6 +139,7 @@ export const syncAppReviews = async ({
     {
       packageId,
       selectedHint,
+      ownerUserId,
       lastSyncedAt: FieldValue.serverTimestamp(),
     },
     { merge: true },
@@ -169,6 +172,7 @@ export const syncAllActiveApps = async () => {
       targetDate,
       selectedHint: appData.selectedHint ?? ',',
       hintMode: appData.hintMode ?? 'hint-wise',
+      ownerUserId: appData.ownerUserId ?? null,
     })
     results.push({ appId: appDoc.id, appName: appData.name ?? appData.packageId, ...result })
   }

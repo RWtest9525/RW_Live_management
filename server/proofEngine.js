@@ -5,7 +5,10 @@ import ffmpeg from 'fluent-ffmpeg'
 import ffmpegStatic from 'ffmpeg-static'
 import { FieldValue } from 'firebase-admin/firestore'
 import { adminDb } from './firebaseAdmin.js'
-import { uploadVideoToDrive } from './driveStorage.js'
+import {
+  ensureSubFolder,
+  uploadVideoToDriveFolder,
+} from './driveStorage.js'
 
 ffmpeg.setFfmpegPath(ffmpegStatic)
 
@@ -72,15 +75,40 @@ export const generateProofForApp = async (appDoc) => {
     await fs.copyFile(videoPath, webmPath)
     await convertWebmToMp4(webmPath, mp4Path)
 
-    const driveUpload = await uploadVideoToDrive({
+    const appData = appDoc.data()
+    const ownerUserId = appData.ownerUserId ?? null
+    const ownerUserDoc = ownerUserId
+      ? await adminDb.collection('users').doc(ownerUserId).get()
+      : null
+    const ownerRootFolderId = ownerUserDoc?.exists
+      ? ownerUserDoc.data().driveFolderId
+      : process.env.GOOGLE_DRIVE_FOLDER_ID
+    const dateFolderName = new Date(now).toISOString().slice(0, 10)
+    const appFolderName = (appData.name ?? appData.packageId ?? appId).replace(
+      /[^a-zA-Z0-9._-]/g,
+      '_',
+    )
+
+    const dateFolderId = await ensureSubFolder({
+      parentFolderId: ownerRootFolderId,
+      folderName: dateFolderName,
+    })
+    const appFolderId = await ensureSubFolder({
+      parentFolderId: dateFolderId,
+      folderName: appFolderName,
+    })
+
+    const driveUpload = await uploadVideoToDriveFolder({
       filePath: mp4Path,
       appId,
       timestamp: now,
+      parentFolderId: appFolderId,
     })
 
     await adminDb.collection('proofs').add({
       appId,
-      appName: appDoc.data().name ?? appDoc.data().packageId,
+      ownerUserId,
+      appName: appData.name ?? appData.packageId,
       videoUrl: driveUpload.webViewLink,
       downloadUrl: driveUpload.webContentLink,
       storagePath: driveUpload.drivePath,
@@ -93,6 +121,7 @@ export const generateProofForApp = async (appDoc) => {
     await adminDb.collection('apps').doc(appId).set(
       {
         proofStatus: 'Proof Generated',
+        ownerUserId,
         proofWebViewLink: driveUpload.webViewLink,
         proofDriveFileId: driveUpload.fileId,
         lastProofAt: FieldValue.serverTimestamp(),

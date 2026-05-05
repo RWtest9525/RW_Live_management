@@ -18,6 +18,7 @@ import { db } from '../lib/firebase'
 const appsCollection = collection(db, 'apps')
 const reviewsCollection = collection(db, 'reviews')
 const proofsCollection = collection(db, 'proofs')
+const usersCollection = collection(db, 'users')
 
 const toAppModel = (id, data) => ({
   id,
@@ -58,13 +59,21 @@ export const seedAppsIfMissing = async () => {
   await batch.commit()
 }
 
-export const subscribeApps = (onData) =>
-  onSnapshot(query(appsCollection, orderBy('name')), (snapshot) => {
-    onData(snapshot.docs.map((entry) => toAppModel(entry.id, entry.data())))
-  })
+const byOwnerQuery = (collectionRef, ownerUserId, ownerField = 'ownerUserId') => {
+  if (!ownerUserId) return query(collectionRef, orderBy('name'))
+  return query(collectionRef, where(ownerField, '==', ownerUserId))
+}
 
-export const subscribeReviews = (onData) =>
-  onSnapshot(reviewsCollection, (snapshot) => {
+export const subscribeApps = ({ ownerUserId, isAdmin, onData }) =>
+  onSnapshot(
+    isAdmin ? query(appsCollection, orderBy('name')) : byOwnerQuery(appsCollection, ownerUserId),
+    (snapshot) => {
+    onData(snapshot.docs.map((entry) => toAppModel(entry.id, entry.data())))
+    },
+  )
+
+export const subscribeReviews = ({ ownerUserId, isAdmin, onData }) =>
+  onSnapshot(isAdmin ? reviewsCollection : query(reviewsCollection, where('ownerUserId', '==', ownerUserId)), (snapshot) => {
     onData(
       snapshot.docs.map((entry) => ({
         id: entry.id,
@@ -73,8 +82,12 @@ export const subscribeReviews = (onData) =>
     )
   })
 
-export const subscribeProofs = (onData) =>
-  onSnapshot(query(proofsCollection, orderBy('createdAt', 'desc')), (snapshot) => {
+export const subscribeProofs = ({ ownerUserId, isAdmin, onData }) =>
+  onSnapshot(
+    isAdmin
+      ? query(proofsCollection, orderBy('createdAt', 'desc'))
+      : query(proofsCollection, where('ownerUserId', '==', ownerUserId)),
+    (snapshot) => {
     onData(
       snapshot.docs.map((entry) => ({
         id: entry.id,
@@ -82,6 +95,17 @@ export const subscribeProofs = (onData) =>
         createdAt:
           entry.data().createdAt?.toDate?.()?.toLocaleString?.('en-IN') ??
           'Pending',
+      })),
+    )
+    },
+  )
+
+export const subscribeUsers = (onData) =>
+  onSnapshot(query(usersCollection, orderBy('createdAt', 'desc')), (snapshot) => {
+    onData(
+      snapshot.docs.map((entry) => ({
+        id: entry.id,
+        ...entry.data(),
       })),
     )
   })
@@ -99,6 +123,7 @@ export const createAppRecord = async (payload) =>
     ratePerReview: Number(payload.ratePerReview ?? 10),
     selectedHint: payload.selectedHint ?? ',',
     monitoringStatus: payload.monitoringStatus ?? 'ACTIVE',
+    ownerUserId: payload.ownerUserId ?? null,
     createdAt: serverTimestamp(),
     lastSyncedAt: serverTimestamp(),
   })

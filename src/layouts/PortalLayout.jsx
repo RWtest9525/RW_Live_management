@@ -13,6 +13,7 @@ const navItems = [
 function PortalLayout() {
   const logout = usePortalStore((state) => state.logout)
   const initializeFirestore = usePortalStore((state) => state.initializeFirestore)
+  const currentUser = usePortalStore((state) => state.currentUser)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -44,7 +45,12 @@ function PortalLayout() {
       </aside>
       <div className="flex-1">
         <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-          <p className="text-lg font-semibold text-slate-800">Business Management Portal</p>
+          <div>
+            <p className="text-lg font-semibold text-slate-800">Business Management Portal</p>
+            <p className="text-xs text-slate-500">
+              {currentUser?.email} ({currentUser?.role ?? 'user'})
+            </p>
+          </div>
           <button
             type="button"
             onClick={handleLogout}

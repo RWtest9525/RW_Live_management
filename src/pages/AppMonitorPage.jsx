@@ -6,6 +6,7 @@ import { triggerSyncForApp } from '../services/syncApi'
 
 function AppMonitorPage() {
   const apps = usePortalStore((state) => state.apps)
+  const currentUser = usePortalStore((state) => state.currentUser)
   const [packageId, setPackageId] = useState('')
   const [appName, setAppName] = useState('')
   const [targetDate, setTargetDate] = useState('')
@@ -14,7 +15,13 @@ function AppMonitorPage() {
   const handleCreateApp = async (event) => {
     event.preventDefault()
     if (!packageId || !appName) return
-    await createAppRecord({ packageId, name: appName, targetCount: 200, ratePerReview: 10 })
+    await createAppRecord({
+      packageId,
+      name: appName,
+      targetCount: 200,
+      ratePerReview: 10,
+      ownerUserId: currentUser?.id ?? null,
+    })
     setPackageId('')
     setAppName('')
     setMessage('App added to Firestore.')
@@ -28,6 +35,7 @@ function AppMonitorPage() {
         targetDate: targetDate || new Date().toISOString(),
         selectedHint: app.hintSymbol ?? ',',
         hintMode: 'hint-wise',
+        ownerUserId: app.ownerUserId ?? currentUser?.id ?? null,
       })
       setMessage(`Sync complete for ${app.name}`)
     } catch (error) {

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import PortalLayout from './layouts/PortalLayout'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -10,8 +11,15 @@ import ProofGalleryPage from './pages/ProofGalleryPage'
 import AppDetailPage from './pages/AppDetailPage'
 import NotFoundPage from './pages/NotFoundPage'
 import RecordPage from './pages/RecordPage'
+import usePortalStore from './store/usePortalStore'
 
 function App() {
+  const hydrateSession = usePortalStore((state) => state.hydrateSession)
+
+  useEffect(() => {
+    hydrateSession()
+  }, [hydrateSession])
+
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />

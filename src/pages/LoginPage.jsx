@@ -7,17 +7,19 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const login = usePortalStore((state) => state.login)
   const isAuthenticated = usePortalStore((state) => state.isAuthenticated)
+  const authLoading = usePortalStore((state) => state.authLoading)
+  const authError = usePortalStore((state) => state.authError)
   const navigate = useNavigate()
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     if (!email || !password) return
-    login()
-    navigate('/dashboard')
+    const result = await login({ email, password })
+    if (result.ok) navigate('/dashboard')
   }
 
   return (
@@ -42,8 +44,9 @@ function LoginPage() {
           />
         </div>
         <button type="submit" className="mt-5 w-full rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-500">
-          Login to Dashboard
+          {authLoading ? 'Logging in...' : 'Login to Dashboard'}
         </button>
+        {authError ? <p className="mt-3 text-sm text-rose-400">{authError}</p> : null}
       </form>
     </div>
   )

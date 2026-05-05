@@ -6,7 +6,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { appId, packageId, targetDate, selectedHint = ',', hintMode = 'hint-wise' } = req.body
+    const {
+      appId,
+      packageId,
+      targetDate,
+      selectedHint = ',',
+      hintMode = 'hint-wise',
+      ownerUserId = null,
+    } = req.body
 
     if (!appId || !packageId || !targetDate) {
       return res.status(400).json({ error: 'appId, packageId and targetDate are required' })
@@ -18,6 +25,7 @@ export default async function handler(req, res) {
       targetDate,
       selectedHint,
       hintMode,
+      ownerUserId,
     })
 
     return res.status(200).json({
