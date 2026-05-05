@@ -76,7 +76,9 @@ function SignupPage() {
               required
             />
             <button type="button" onClick={() => setShowPassword((v) => !v)} className="rounded-lg bg-slate-700 px-3 text-sm text-white">
-              {showPassword ? 'Hide' : 'Show'}
+              <span className="text-lg" aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                {showPassword ? '🙈' : '👁️'}
+              </span>
             </button>
           </div>
           <div className="flex gap-2">
@@ -89,7 +91,9 @@ function SignupPage() {
               required
             />
             <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="rounded-lg bg-slate-700 px-3 text-sm text-white">
-              {showConfirmPassword ? 'Hide' : 'Show'}
+              <span className="text-lg" aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>
+                {showConfirmPassword ? '🙈' : '👁️'}
+              </span>
             </button>
           </div>
         </div>

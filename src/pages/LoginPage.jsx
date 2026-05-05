@@ -47,9 +47,10 @@ function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((value) => !value)}
-              className="rounded-lg bg-slate-700 px-3 text-sm text-white"
+              className="rounded-lg bg-slate-700 px-3 text-lg text-white"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
-              {showPassword ? 'Hide' : 'Show'}
+              {showPassword ? '🙈' : '👁️'}
             </button>
           </div>
         </div>

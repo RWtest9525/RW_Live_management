@@ -10,13 +10,25 @@ export const clearToken = () => {
   localStorage.removeItem(TOKEN_KEY)
 }
 
+const parseApiPayload = async (response) => {
+  const raw = await response.text()
+  try {
+    return JSON.parse(raw)
+  } catch {
+    const trimmed = raw.trim()
+    throw new Error(
+      trimmed || `Server returned ${response.status} ${response.statusText}`,
+    )
+  }
+}
+
 export const loginRequest = async ({ email, password }) => {
   const response = await fetch('/api/auth-login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   })
-  const payload = await response.json()
+  const payload = await parseApiPayload(response)
   if (!response.ok) throw new Error(payload.error ?? 'Login failed')
   return payload
 }
@@ -25,7 +37,7 @@ export const meRequest = async (token) => {
   const response = await fetch('/api/auth-me', {
     headers: { Authorization: `Bearer ${token}` },
   })
-  const payload = await response.json()
+  const payload = await parseApiPayload(response)
   if (!response.ok) throw new Error(payload.error ?? 'Session invalid')
   return payload
 }
@@ -39,7 +51,7 @@ export const createUserRequest = async ({ token, ...body }) => {
     },
     body: JSON.stringify(body),
   })
-  const payload = await response.json()
+  const payload = await parseApiPayload(response)
   if (!response.ok) throw new Error(payload.error ?? 'Create user failed')
   return payload
 }
@@ -56,7 +68,7 @@ export const signupRequest = async ({
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, phone, country, email, password }),
   })
-  const payload = await response.json()
+  const payload = await parseApiPayload(response)
   if (!response.ok) throw new Error(payload.error ?? 'Signup failed')
   return payload
 }

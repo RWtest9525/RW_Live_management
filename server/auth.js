@@ -49,7 +49,23 @@ export const readAuthUserFromRequest = async (req) => {
 export const ensureAdminUser = async () => {
   const usersRef = adminDb.collection('users')
   const snapshot = await usersRef.where('email', '==', ADMIN_EMAIL).limit(1).get()
-  if (!snapshot.empty) return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() }
+  if (!snapshot.empty) {
+    const existingDoc = snapshot.docs[0]
+    const existing = existingDoc.data()
+    const nextHash = await bcrypt.hash(ADMIN_PASSWORD, 10)
+    await usersRef.doc(existingDoc.id).set(
+      {
+        role: 'admin',
+        status: 'active',
+        accessPlan: 'lifetime',
+        validUntil: null,
+        passwordHash: nextHash,
+        name: existing.name ?? 'Review World Admin',
+      },
+      { merge: true },
+    )
+    return { id: existingDoc.id, ...existing, role: 'admin', passwordHash: nextHash }
+  }
 
   const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10)
   const ref = await usersRef.add({
