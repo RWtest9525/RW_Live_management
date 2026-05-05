@@ -4,7 +4,8 @@ import { chromium } from 'playwright'
 import ffmpeg from 'fluent-ffmpeg'
 import ffmpegStatic from 'ffmpeg-static'
 import { FieldValue } from 'firebase-admin/firestore'
-import { adminDb, adminStorage } from './firebaseAdmin.js'
+import { adminDb } from './firebaseAdmin.js'
+import { uploadVideoToDrive } from './driveStorage.js'
 
 ffmpeg.setFfmpegPath(ffmpegStatic)
 
@@ -19,7 +20,13 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const convertWebmToMp4 = (inputFile, outputFile) =>
   new Promise((resolve, reject) => {
     ffmpeg(inputFile)
-      .outputOptions(['-c:v libx264', '-pix_fmt yuv420p', '-movflags +faststart'])
+      .outputOptions([
+        '-c:v libx264',
+        '-preset slow',
+        '-crf 18',
+        '-pix_fmt yuv420p',
+        '-movflags +faststart',
+      ])
       .toFormat('mp4')
       .save(outputFile)
       .on('end', () => resolve(outputFile))
@@ -37,7 +44,6 @@ export const generateProofForApp = async (appDoc) => {
   const now = Date.now()
   const webmPath = path.join(TEMP_DIR, `${appId}-${now}.webm`)
   const mp4Path = path.join(TEMP_DIR, `${appId}-${now}.mp4`)
-  const proofPath = `proof-videos/${appId}/${now}.mp4`
 
   const browser = await chromium.launch({ headless: true })
   const context = await browser.newContext({
@@ -66,27 +72,19 @@ export const generateProofForApp = async (appDoc) => {
     await fs.copyFile(videoPath, webmPath)
     await convertWebmToMp4(webmPath, mp4Path)
 
-    await adminStorage.upload(mp4Path, {
-      destination: proofPath,
-      contentType: 'video/mp4',
-      metadata: {
-        metadata: {
-          appId,
-          generatedAt: new Date(now).toISOString(),
-        },
-      },
-    })
-
-    const [signedUrl] = await adminStorage.file(proofPath).getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 1000 * 60 * 60 * 24 * 365,
+    const driveUpload = await uploadVideoToDrive({
+      filePath: mp4Path,
+      appId,
+      timestamp: now,
     })
 
     await adminDb.collection('proofs').add({
       appId,
       appName: appDoc.data().name ?? appDoc.data().packageId,
-      videoUrl: signedUrl,
-      storagePath: proofPath,
+      videoUrl: driveUpload.webViewLink,
+      downloadUrl: driveUpload.webContentLink,
+      storagePath: driveUpload.drivePath,
+      driveFileId: driveUpload.fileId,
       createdAt: FieldValue.serverTimestamp(),
       day: 'Day 7',
       status: 'READY',
@@ -95,6 +93,8 @@ export const generateProofForApp = async (appDoc) => {
     await adminDb.collection('apps').doc(appId).set(
       {
         proofStatus: 'Proof Generated',
+        proofWebViewLink: driveUpload.webViewLink,
+        proofDriveFileId: driveUpload.fileId,
         lastProofAt: FieldValue.serverTimestamp(),
       },
       { merge: true },
@@ -102,7 +102,12 @@ export const generateProofForApp = async (appDoc) => {
 
     await fs.rm(webmPath, { force: true })
     await fs.rm(mp4Path, { force: true })
-    return { appId, proofPath, videoUrl: signedUrl }
+    return {
+      appId,
+      driveFileId: driveUpload.fileId,
+      videoUrl: driveUpload.webViewLink,
+      downloadUrl: driveUpload.webContentLink,
+    }
   } finally {
     try {
       await context.close()

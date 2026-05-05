@@ -7,11 +7,17 @@ const normalize = (value) => value.replace(/\s+/g, ' ').trim().toLowerCase()
 const makeReviewKey = (userName, content) =>
   crypto.createHash('sha256').update(`${normalize(userName)}::${normalize(content)}`).digest('hex')
 
+const isRepeatedSymbolTail = (value) => {
+  if (value.length < 2) return false
+  const lastChar = value.at(-1)
+  const prevChar = value.at(-2)
+  return /\W/.test(lastChar) && lastChar === prevChar
+}
+
 const endsWithSingleHint = (text, selectedHint) => {
+  if (!selectedHint) return false
   if (!text.endsWith(selectedHint)) return false
-  if (selectedHint === ',') return text.endsWith(',') && !text.endsWith(',,')
-  if (selectedHint === '.') return text.endsWith('.') && !text.endsWith('..')
-  return !text.endsWith(selectedHint.repeat(2))
+  return !text.endsWith(`${selectedHint}${selectedHint}`)
 }
 
 export const matchesStrictHint = (text, selectedHint, hintMode) => {
@@ -19,11 +25,13 @@ export const matchesStrictHint = (text, selectedHint, hintMode) => {
   if (!normalized) return false
 
   if (hintMode === 'hint-wise') {
+    // Exact trailing hint only; repeated symbols are rejected.
     return endsWithSingleHint(normalized, selectedHint)
   }
 
-  if (/\W\W$/.test(normalized)) return false
-  if (normalized.endsWith('..')) return false
+  // No-hint accepts single "." or trailing alphanumeric only.
+  // Repeated punctuation tails like "..", ",,", "!!" are always excluded.
+  if (isRepeatedSymbolTail(normalized)) return false
   const lastChar = normalized.at(-1)
   return lastChar === '.' || /[a-z0-9]/i.test(lastChar)
 }

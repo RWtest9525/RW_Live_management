@@ -25,7 +25,7 @@ function ProofGalleryPage() {
                 View Recording
               </a>
               <a
-                href={proof.videoUrl ?? '#'}
+                href={proof.downloadUrl ?? proof.videoUrl ?? '#'}
                 download
                 className="rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
               >
