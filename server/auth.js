@@ -5,7 +5,7 @@ import { adminDb } from './firebaseAdmin.js'
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? 'rw-dev-secret-change-me'
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL ?? 'reviewsworld01@gmail.com').toLowerCase()
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'ReviewWorld@123'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'Yash@952518'
 
 const base64UrlEncode = (value) => Buffer.from(value).toString('base64url')
 const base64UrlDecode = (value) => Buffer.from(value, 'base64url').toString('utf8')
