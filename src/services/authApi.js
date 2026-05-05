@@ -43,3 +43,20 @@ export const createUserRequest = async ({ token, ...body }) => {
   if (!response.ok) throw new Error(payload.error ?? 'Create user failed')
   return payload
 }
+
+export const signupRequest = async ({
+  name,
+  phone,
+  country,
+  email,
+  password,
+}) => {
+  const response = await fetch('/api/auth-signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, phone, country, email, password }),
+  })
+  const payload = await response.json()
+  if (!response.ok) throw new Error(payload.error ?? 'Signup failed')
+  return payload
+}

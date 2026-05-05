@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import PortalLayout from './layouts/PortalLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
+import TermsPage from './pages/TermsPage'
 import DashboardPage from './pages/DashboardPage'
 import MoneyTrackerPage from './pages/MoneyTrackerPage'
 import AppMonitorPage from './pages/AppMonitorPage'
@@ -23,6 +25,8 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/terms-and-conditions" element={<TermsPage />} />
       <Route
         element={
           <ProtectedRoute>
