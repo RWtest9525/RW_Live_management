@@ -1,16 +1,52 @@
-# React + Vite
+# Review World Live Checker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A comprehensive monitoring system for Play Store reviews with automated proof generation.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Multi-user Dashboard**: Manage multiple apps and monitor review status.
+- **Automated Sync**: Hourly syncing of reviews from Google Play Store.
+- **Proof Generation**: Automated video proof generation using Playwright.
+- **Google Drive Integration**: Automatically stores generated proofs in user-specific folders.
+- **Telegram Reports**: Daily summaries sent via Telegram Bot.
 
-## React Compiler
+## 🛠️ Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Clone and Install**:
+   ```bash
+   npm install
+   ```
 
-## Expanding the ESLint configuration
+2. **Environment Variables**:
+   Copy `.env.example` to `.env` and fill in the required values:
+   - `FIREBASE_SERVICE_ACCOUNT_JSON`: Your Firebase Service Account JSON string.
+   - `GOOGLE_DRIVE_FOLDER_ID`: The root folder ID where proofs will be stored.
+   - `PORTAL_BASE_URL`: The URL where the app is hosted (used for proof generation).
+   - `CRON_SECRET`: A secret string to protect your automation endpoints.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+3. **Development**:
+   ```bash
+   npm run dev
+   ```
+
+## 🌍 Deployment (Vercel)
+
+1. **Frontend**: Vite handles the build automatically.
+2. **API**: Vercel Functions handle the logic in the `api/` folder.
+3. **Cron Jobs**: 
+   Add a `vercel.json` with a `crons` section or use the Vercel Dashboard to trigger:
+   - `/api/automation-run` (Hourly)
+   - `/api/cron-daily-report` (Daily)
+
+   *Note: Ensure `CRON_SECRET` is set in Vercel Environment Variables and passed in the Authorization header as `Bearer <secret>`.*
+
+## 🔒 Security
+
+- **Admin Account**: Default admin is `reviewsworld01@gmail.com`. Password can be configured in `server/auth.js`.
+- **JWT Auth**: Secure session management using custom signed tokens.
+- **Protected Routes**: Frontend and Backend both verify user roles and validity.
+
+## 📦 Dependencies
+
+- **Frontend**: React 19, Tailwind CSS 4, Zustand.
+- **Backend**: Firebase Admin, Playwright, fluent-ffmpeg, google-play-scraper.

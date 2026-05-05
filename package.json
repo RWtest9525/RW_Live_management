@@ -12,11 +12,15 @@
     "worker:once": "node workers/automationWorker.js --run-once"
   },
   "dependencies": {
+    "@exodus/bytes": "^1.15.0",
     "bcryptjs": "^3.0.3",
     "firebase": "^12.12.1",
+    "node-domexception": "^2.0.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.2",
+    "uuid": "^14.0.0",
+    "whatwg-encoding": "^3.1.1",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -26,7 +30,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "axios": "^1.16.0",
-    "eslint": "^10.2.1",
+    "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "ffmpeg-static": "^5.3.0",
@@ -36,7 +40,7 @@
     "google-play-scraper": "^10.1.2",
     "googleapis": "^171.4.0",
     "node-cron": "^4.2.1",
-    "playwright": "^1.59.1",
+    "playwright": "^1.50.0",
     "tailwindcss": "^4.2.4",
     "vite": "^8.0.10"
   }

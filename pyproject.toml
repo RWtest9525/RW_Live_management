@@ -1,8 +1,0 @@
-[project]
-name = "rw-live-cheker"
-version = "0.1.0"
-description = "Review World Live Checker"
-dependencies = []
-
-[project.scripts]
-app = "main:app"

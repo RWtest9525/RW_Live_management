@@ -6,6 +6,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
+  // Security check for cron/automation
+  const authHeader = req.headers.authorization
+  const cronSecret = process.env.CRON_SECRET
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
   try {
     const syncResults = await syncAllActiveApps()
     const proofResults = await generateDueProofs()

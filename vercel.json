@@ -8,5 +8,15 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/automation-run",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron-daily-report",
+      "schedule": "0 0 * * *"
+    }
   ]
 }
