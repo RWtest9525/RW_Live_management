@@ -140,6 +140,17 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_payments_userId ON payments(userId);
   CREATE INDEX IF NOT EXISTS idx_payments_orderId ON payments(razorpayOrderId);
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
+`);
+
+db.exec(`
+  INSERT OR IGNORE INTO settings (key, value) VALUES ('maintenance_active', 'false');
+  INSERT OR IGNORE INTO settings (key, value) VALUES ('maintenance_end_time', '');
+  INSERT OR IGNORE INTO settings (key, value) VALUES ('maintenance_message', 'We are improving your experience. Please wait until the maintenance window is complete.');
 `);
 
 const reviewColumnNames = () =>

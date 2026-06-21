@@ -58,6 +58,11 @@ const navItems = [
       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
     </svg>
   )},
+  { label: 'Maintenance Mode', path: '/admin-maintenance', adminOnly: true, icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.724 1.724 0 00-2.57 1.25c-.77.29-1.56-.52-2.12-.08l-.29.29c-.44.56.37 1.35.08 2.12c-.22.56-.76.92-1.25 1.25c-1.56.38-1.56 2.6 0 2.98c.29.77-.52 1.56-.08 2.12l.29.29c.56.44 1.35-.37 2.12-.08c.56.22.92.76 1.25 1.25c.38 1.56 2.6 1.56 2.98 0a1.724 1.724 0 002.57-1.25c.77-.29 1.56.52 2.12.08l.29-.29c.44-.56-.37-1.35-.08-2.12c.22-.56.76-.92 1.25-1.25c1.56-.38 1.56-2.6 0-2.98c-.29-.77.52-1.56.08-2.12l-.29-.29c-.56-.44-1.35.37-2.12.08c-.56-.22-.92-.76-1.25-1.25c-.38-1.56-2.6-1.56-2.98 0zm-1.49 10.33a3.5 3.5 0 110-7 3.5 3.5 0 010 7z" clipRule="evenodd" />
+    </svg>
+  )},
 ]
 
 function PortalLayout() {
@@ -70,7 +75,33 @@ function PortalLayout() {
   const toggleTheme = usePortalStore((state) => state.toggleTheme)
   const navigate = useNavigate()
   const location = useLocation()
+  
+  const fetchMaintenanceStatus = usePortalStore((state) => state.fetchMaintenanceStatus)
+  const maintenanceActive = usePortalStore((state) => state.maintenanceActive)
+  const maintenanceEndTime = usePortalStore((state) => state.maintenanceEndTime)
+  const maintenanceMessage = usePortalStore((state) => state.maintenanceMessage)
+  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('rw_sidebar_collapsed') === 'true'
+  })
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev
+      localStorage.setItem('rw_sidebar_collapsed', String(next))
+      return next
+    })
+  }
+
+  // Poll maintenance status
+  useEffect(() => {
+    fetchMaintenanceStatus()
+    const id = setInterval(() => {
+      fetchMaintenanceStatus()
+    }, 15000)
+    return () => clearInterval(id)
+  }, [fetchMaintenanceStatus])
 
   useEffect(() => {
     if (!isAuthenticated) return undefined
@@ -107,23 +138,32 @@ function PortalLayout() {
     return true
   })
 
+  // If maintenance is active and the logged-in user is not admin, render the full screen overlay page
+  if (maintenanceActive && currentUser?.role !== 'admin') {
+    return <MaintenanceUserView endTime={maintenanceEndTime} message={maintenanceMessage} />
+  }
+
   return (
     <div className={`flex min-h-screen transition-colors duration-200 ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex w-64 border-r flex-col transition-colors duration-200 ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'} p-5 sticky top-0 h-screen`}>
-        {/* ... (keep desktop sidebar content same) ... */}
+      <aside className={`hidden md:flex ${isSidebarCollapsed ? 'w-20 p-3' : 'w-64 p-5'} border-r flex-col transition-all duration-300 ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'} sticky top-0 h-screen`}>
         <div className="flex-1 overflow-y-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <Logo className="h-10 w-10" />
-            <h1 className={`text-xl font-black uppercase tracking-tighter ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Review World</h1>
+          <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} mb-8`}>
+            <Logo className="h-10 w-10 flex-shrink-0" />
+            {!isSidebarCollapsed && (
+              <h1 className={`text-xl font-black uppercase tracking-tighter truncate ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                Review World
+              </h1>
+            )}
           </div>
           <nav className="space-y-1">
             {filteredNavItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
+                title={isSidebarCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                  `flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
                       : theme === 'dark'
@@ -132,14 +172,15 @@ function PortalLayout() {
                   }`
                 }
               >
-                {item.icon}
-                {item.label}
+                <div className="flex-shrink-0">{item.icon}</div>
+                {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
               </NavLink>
             ))}
             
             <button
               onClick={toggleTheme}
-              className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+              title={isSidebarCollapsed ? (theme === 'dark' ? 'Light Mode' : 'Dark Mode') : undefined}
+              className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                 theme === 'dark'
                   ? 'text-yellow-400 hover:bg-slate-800'
                   : 'text-slate-600 hover:bg-slate-100'
@@ -147,17 +188,17 @@ function PortalLayout() {
             >
               {theme === 'dark' ? (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
                   </svg>
-                  <span>Light Mode</span>
+                  {!isSidebarCollapsed && <span className="truncate">Light Mode</span>}
                 </>
               ) : (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                   </svg>
-                  <span>Dark Mode</span>
+                  {!isSidebarCollapsed && <span className="truncate">Dark Mode</span>}
                 </>
               )}
             </button>
@@ -165,23 +206,51 @@ function PortalLayout() {
         </div>
 
         <div className="mt-auto space-y-4 pt-4 border-t border-slate-800/20">
+          {/* Collapse/Expand Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            title={isSidebarCollapsed ? 'Expand Menu' : 'Collapse Menu'}
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} rounded-lg px-3 py-2 text-sm font-bold transition-all ${
+              theme === 'dark'
+                ? 'text-slate-400 hover:bg-slate-800'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            {isSidebarCollapsed ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span className="truncate">Collapse Menu</span>
+              </>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={handleLogout}
-            className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-bold transition-all ${
+            title={isSidebarCollapsed ? 'Logout' : undefined}
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} rounded-lg px-3 py-2 text-sm font-bold transition-all ${
               theme === 'dark'
                 ? 'text-rose-400 hover:bg-rose-500/10'
                 : 'text-rose-600 hover:bg-rose-50'
             }`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            Logout
+            {!isSidebarCollapsed && <span className="truncate">Logout</span>}
           </button>
           
           <div className="flex items-center justify-center pt-2 opacity-30">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Reviews World v2.0</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              {isSidebarCollapsed ? 'v2' : 'Reviews World v2.0'}
+            </span>
           </div>
         </div>
       </aside>
@@ -321,6 +390,89 @@ function PortalLayout() {
         )}
       </div>
     </div>
+  )
+}
+
+function MaintenanceUserView({ endTime, message }) {
+  const [timeLeft, setTimeLeft] = useState('')
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const diff = endTime - Date.now()
+      if (diff <= 0) {
+        setTimeLeft('00:00:00')
+        return
+      }
+
+      const totalSecs = Math.floor(diff / 1000)
+      const hrs = Math.floor(totalSecs / 3600)
+      const mins = Math.floor((totalSecs % 3600) / 60)
+      const secs = totalSecs % 60
+
+      const format = (num) => String(num).padStart(2, '0')
+      setTimeLeft(`${format(hrs)}:${format(mins)}:${format(secs)}`)
+    }
+
+    updateTimer()
+    const interval = setInterval(updateTimer, 1000)
+    return () => clearInterval(interval)
+  }, [endTime])
+
+  const formatExpectedOpening = (ts) => {
+    if (!ts) return ''
+    const date = new Date(ts)
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const day = date.getDate()
+    const month = months[date.getMonth()]
+    let hrs = date.getHours()
+    const mins = String(date.getMinutes()).padStart(2, '0')
+    const ampm = hrs >= 12 ? 'PM' : 'AM'
+    hrs = hrs % 12
+    hrs = hrs ? hrs : 12
+    return `${day} ${month}, ${hrs}:${mins} ${ampm}`
+  }
+
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08040d] px-4 py-8 text-white w-full">
+      <div className="absolute -left-20 bottom-0 h-[420px] w-[420px] rounded-full bg-violet-600/25 blur-3xl" />
+      <div className="absolute -right-24 top-0 h-[430px] w-[430px] rounded-full bg-amber-400/20 blur-3xl" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08),transparent_24%)]" />
+
+      <div className="relative z-10 w-full max-w-lg rounded-[2.5rem] border border-white/12 bg-white/[0.04] p-8 text-center shadow-2xl shadow-black/80 backdrop-blur-2xl">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-xl shadow-indigo-950/50">
+          <Logo className="h-12 w-12 text-white" />
+        </div>
+
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400">
+          App Under Maintenance
+        </p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
+          We will be back soon
+        </h1>
+        <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-300">
+          {message}
+        </p>
+
+        <div className="mt-8 rounded-2xl bg-black/45 p-6 border border-white/5 shadow-inner">
+          <p className="font-mono text-5xl font-black tracking-wider text-white">
+            {timeLeft || '00:00:00'}
+          </p>
+          <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            Remaining Time
+          </p>
+          
+          <div className="mt-4 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-pulse w-full" />
+          </div>
+        </div>
+
+        {endTime && (
+          <div className="mt-6 border-t border-white/5 pt-4 text-xs font-bold text-slate-400">
+            Expected opening: <span className="text-white">{formatExpectedOpening(endTime)}</span>
+          </div>
+        )}
+      </div>
+    </main>
   )
 }
 

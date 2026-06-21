@@ -60,6 +60,9 @@ const usePortalStore = create((set, get) => ({
   theme: localStorage.getItem('portal-theme') || 'light',
   subscriptionsReady: false,
   syncState: {},
+  maintenanceActive: false,
+  maintenanceEndTime: null,
+  maintenanceMessage: '',
   setCurrentUser: (user) => set({ currentUser: user }),
   refreshCurrentUser: async () => {
     const token = get().token || getStoredToken()
@@ -261,6 +264,45 @@ const usePortalStore = create((set, get) => ({
   },
   getAppById: (id) => get().apps.find((app) => app.id === id),
   getReviewsByAppId: (id) => get().reviews.filter((review) => review.appId === id),
+  fetchMaintenanceStatus: async () => {
+    try {
+      const response = await fetch('/api/maintenance-status')
+      if (response.ok) {
+        const data = await response.json()
+        set({
+          maintenanceActive: data.active,
+          maintenanceEndTime: data.endTime,
+          maintenanceMessage: data.message,
+        })
+        return data
+      }
+    } catch (error) {
+      console.error('Failed to fetch maintenance status:', error)
+    }
+    return null
+  },
+  updateMaintenanceSettings: async (payload) => {
+    const token = get().token || localStorage.getItem('rw_session_token')
+    try {
+      const response = await fetch('/api/maintenance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to update maintenance settings')
+      }
+      await get().fetchMaintenanceStatus()
+      return { ok: true }
+    } catch (error) {
+      console.error('Failed to update maintenance:', error)
+      return { ok: false, error: error.message }
+    }
+  },
 }))
 
 export default usePortalStore
