@@ -1,3 +1,13 @@
+---
+title: Review World
+emoji: 👁️
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Review World Live Checker
 
 A comprehensive monitoring system for Play Store reviews with automated proof generation.
