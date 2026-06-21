@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'url'
 import { google } from 'googleapis'
 import { getDriveAuth } from './googleDriveAuth.js'
+import { ensureSubFolder } from './driveStorage.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID
@@ -20,10 +21,24 @@ export const restoreDbFromDrive = async () => {
 
   console.log('[backup] Checking for database backups on Google Drive...')
   try {
-    const response = await drive.files.list({
-      q: `'${driveFolderId}' in parents and (name = 'reviews.db' or name = 'users.json') and trashed = false`,
+    const systemBackupsFolderId = await ensureSubFolder({
+      parentFolderId: driveFolderId,
+      folderName: 'System Backups',
+    })
+
+    let response = await drive.files.list({
+      q: `'${systemBackupsFolderId}' in parents and (name = 'reviews.db' or name = 'users.json') and trashed = false`,
       fields: 'files(id, name)',
     })
+
+    // Fallback to check root folder if no files found in System Backups subfolder
+    if (!response.data.files || response.data.files.length === 0) {
+      console.log('[backup] No backups found in System Backups folder. Checking root folder...')
+      response = await drive.files.list({
+        q: `'${driveFolderId}' in parents and (name = 'reviews.db' or name = 'users.json') and trashed = false`,
+        fields: 'files(id, name)',
+      })
+    }
 
     const files = response.data.files || []
     for (const file of files) {
@@ -75,9 +90,14 @@ export const backupDbToDrive = async () => {
 
   console.log('[backup] Backing up database to Google Drive...')
   try {
+    const systemBackupsFolderId = await ensureSubFolder({
+      parentFolderId: driveFolderId,
+      folderName: 'System Backups',
+    })
+
     // 1. Find existing backup files
     const response = await drive.files.list({
-      q: `'${driveFolderId}' in parents and (name = 'reviews.db' or name = 'users.json') and trashed = false`,
+      q: `'${systemBackupsFolderId}' in parents and (name = 'reviews.db' or name = 'users.json') and trashed = false`,
       fields: 'files(id, name)',
     })
     const files = response.data.files || []
@@ -97,20 +117,20 @@ export const backupDbToDrive = async () => {
             body: fs.createReadStream(reviewsDbLocal),
           },
         })
-        console.log('[backup] Updated reviews.db backup on Google Drive.')
+        console.log('[backup] Updated reviews.db backup on Google Drive inside System Backups folder.')
       } else {
         // Create new file
         await drive.files.create({
           requestBody: {
             name: 'reviews.db',
-            parents: [driveFolderId],
+            parents: [systemBackupsFolderId],
           },
           media: {
             mimeType: 'application/octet-stream',
             body: fs.createReadStream(reviewsDbLocal),
           },
         })
-        console.log('[backup] Created reviews.db backup on Google Drive.')
+        console.log('[backup] Created reviews.db backup on Google Drive inside System Backups folder.')
       }
     }
 
@@ -124,19 +144,19 @@ export const backupDbToDrive = async () => {
             body: fs.createReadStream(usersJsonLocal),
           },
         })
-        console.log('[backup] Updated users.json backup on Google Drive.')
+        console.log('[backup] Updated users.json backup on Google Drive inside System Backups folder.')
       } else {
         await drive.files.create({
           requestBody: {
             name: 'users.json',
-            parents: [driveFolderId],
+            parents: [systemBackupsFolderId],
           },
           media: {
             mimeType: 'application/json',
             body: fs.createReadStream(usersJsonLocal),
           },
         })
-        console.log('[backup] Created users.json backup on Google Drive.')
+        console.log('[backup] Created users.json backup on Google Drive inside System Backups folder.')
       }
     }
   } catch (error) {

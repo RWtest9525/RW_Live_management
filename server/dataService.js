@@ -158,10 +158,19 @@ export const createClientLocal = async (payload) => {
       throw new Error('GOOGLE_DRIVE_FOLDER_ID is not set.')
     }
 
-    console.log(`Creating client folder for ${payload.name} inside root: ${rootFolderId}`)
+    // Resolve owner user's drive folder as parent, fallback to root folder
+    let parentFolderId = rootFolderId
+    if (payload.ownerUserId) {
+      const user = getUsers().find(u => u.id === payload.ownerUserId)
+      if (user && user.driveFolderId) {
+        parentFolderId = user.driveFolderId
+      }
+    }
+
+    console.log(`Creating client folder for ${payload.name} inside parent: ${parentFolderId}`)
     const clientFolderName = payload.name.replace(/[^a-zA-Z0-9._-]/g, '_')
     clientFolderId = await ensureSubFolder({
-      parentFolderId: rootFolderId,
+      parentFolderId,
       folderName: clientFolderName,
     })
     console.log(`Client folder created with ID: ${clientFolderId}`)

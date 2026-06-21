@@ -242,6 +242,12 @@ export const uploadVideoToDriveFolder = async ({
 
 export const createDriveTestDocument = async () => {
   if (!drive || !driveFolderId) throw new Error('Google Drive not configured.')
+  
+  const systemBackupsFolderId = await ensureSubFolder({
+    parentFolderId: driveFolderId,
+    folderName: 'System Backups',
+  })
+
   const timestamp = Date.now()
   const testContent = `Review World Drive test: ${new Date(timestamp).toISOString()}`
   let response
@@ -250,7 +256,7 @@ export const createDriveTestDocument = async () => {
       ...GDRIVE_ALL,
       requestBody: {
         name: `rw-drive-test-${timestamp}.txt`,
-        parents: [driveFolderId],
+        parents: [systemBackupsFolderId],
         mimeType: 'text/plain',
       },
       media: {
@@ -283,7 +289,7 @@ export const createDriveTestDocument = async () => {
     fileName: fileInfo.data.name,
     webViewLink: fileInfo.data.webViewLink,
     webContentLink: fileInfo.data.webContentLink,
-    folderId: driveFolderId,
+    folderId: systemBackupsFolderId,
   }
 }
 
