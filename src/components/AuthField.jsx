@@ -30,16 +30,16 @@ const icons = {
 export function AuthField({ label, icon = 'email', right = null, className = '', ...inputProps }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-2.5 block text-xs font-black uppercase tracking-[0.18em] text-slate-200">
+      <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.18em] text-slate-200">
         {label}
       </span>
-      <span className="group flex items-center rounded-2xl border border-slate-600/70 bg-slate-900/90 px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all focus-within:border-amber-300 focus-within:bg-slate-900 focus-within:ring-4 focus-within:ring-amber-300/15">
+      <span className="group flex items-center rounded-xl border border-slate-600/70 bg-slate-900/90 px-4 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all focus-within:border-amber-300 focus-within:bg-slate-900 focus-within:ring-4 focus-within:ring-amber-300/15">
         <span className="mr-3 text-slate-300 transition-colors group-focus-within:text-amber-300">
           {icons[icon]}
         </span>
         <input
           {...inputProps}
-          className="min-h-12 w-full bg-transparent text-base font-bold text-white outline-none placeholder:font-semibold placeholder:text-slate-500 sm:text-[17px]"
+          className="min-h-10 w-full bg-transparent text-base font-bold text-white outline-none placeholder:font-semibold placeholder:text-slate-500 sm:text-[16px]"
         />
         {right}
       </span>
