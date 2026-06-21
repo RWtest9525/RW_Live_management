@@ -422,6 +422,24 @@ export const syncAllActiveApps = async () => {
         hour12: false,
       })
       if (currentIstTime < appData.listTime) return false
+
+      if (appData.lastSyncedAt) {
+        const lastSyncDate = new Date(appData.lastSyncedAt)
+        const lastSyncDay = lastSyncDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+        
+        if (lastSyncDay === todayIst) {
+          const lastSyncTimeIst = lastSyncDate.toLocaleTimeString('en-GB', {
+            timeZone: 'Asia/Kolkata',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          })
+          if (lastSyncTimeIst >= appData.listTime) {
+            return false // Already synced today on or after the list time
+          }
+        }
+      }
+      return true
     }
 
     const lastSyncDay = appData.lastSyncedAt

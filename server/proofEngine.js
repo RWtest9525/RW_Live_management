@@ -13,6 +13,7 @@ import {
 import { createProofVideoToken, createSessionToken } from './auth.js'
 import { findUserById } from './userStore.js'
 import { serviceAccount } from './googleServiceAccount.js'
+import { getDriveAuth } from './googleDriveAuth.js'
 
 ffmpeg.setFfmpegPath(ffmpegStatic)
 
@@ -162,6 +163,8 @@ export const generateProofForApp = async (appData, targetDay = 7, options = {}) 
   const webmPath = path.join(TEMP_DIR, `${appId}-day${targetDay}-${now}.webm`)
   const mp4Path = path.join(TEMP_DIR, `${appId}-day${targetDay}-${now}.mp4`)
 
+  let dateFolderName = new Date(proofTimestamp).toISOString().slice(0, 10)
+
   const browser = await chromium.launch({ headless: true })
   const viewW = 1920
   const viewH = 1080
@@ -225,10 +228,11 @@ export const generateProofForApp = async (appData, targetDay = 7, options = {}) 
 
     const ownerUserId = appData.ownerUserId ?? null
 
+    const { auth: driveAuth } = getDriveAuth()
     const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID
     const driveReady =
       Boolean(rootFolderId) &&
-      Boolean(serviceAccount?.client_email && serviceAccount?.private_key)
+      Boolean(driveAuth)
 
     if (!driveReady) {
       console.warn(
@@ -266,15 +270,24 @@ export const generateProofForApp = async (appData, targetDay = 7, options = {}) 
       }
     }
 
-    let dateFolderName = new Date(proofTimestamp).toISOString().slice(0, 10)
-
     try {
       const client = localDb.prepare('SELECT * FROM clients WHERE id = ?').get(appData.clientId)
-      const clientName = (client?.name || 'General').replace(/[^a-zA-Z0-9._-]/g, '_')
-      const clientFolderId = await ensureSubFolder({
-        parentFolderId: rootFolderId,
-        folderName: clientName,
-      })
+      let clientFolderId = client?.driveFolderId
+
+      if (!clientFolderId) {
+        const clientName = (client?.name || 'General').replace(/[^a-zA-Z0-9._-]/g, '_')
+        let parentFolderId = rootFolderId
+        if (owner && owner.driveFolderId) {
+          parentFolderId = owner.driveFolderId
+        }
+        clientFolderId = await ensureSubFolder({
+          parentFolderId,
+          folderName: clientName,
+        })
+        if (client) {
+          localDb.prepare('UPDATE clients SET driveFolderId = ? WHERE id = ?').run(clientFolderId, client.id)
+        }
+      }
 
       // 2. Date format DD-MM-YY
       const d = new Date(proofTimestamp)
