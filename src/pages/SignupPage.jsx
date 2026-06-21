@@ -150,7 +150,7 @@ function SignupPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08040d] px-4 py-4 text-white lg:h-screen lg:py-6">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08040d] px-4 py-4 text-white lg:h-screen lg:py-6 select-none">
       <div className="absolute -left-20 bottom-0 h-[420px] w-[420px] rounded-full bg-violet-600/30 blur-3xl" />
       <div className="absolute -right-24 top-0 h-[430px] w-[430px] rounded-full bg-amber-400/25 blur-3xl" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.12),transparent_24%),linear-gradient(135deg,rgba(255,255,255,0.05)_0_1px,transparent_1px_34px)]" />
@@ -287,7 +287,7 @@ function SignupPage() {
           />
           <span>
             I accept the{' '}
-            <Link className="text-amber-200 hover:text-amber-100" to="/terms-and-conditions">
+            <Link className="text-amber-200" to="/terms-and-conditions">
               Terms and Conditions
             </Link>
           </span>
@@ -307,7 +307,7 @@ function SignupPage() {
         ) : null}
 
         <div className="mt-5 flex flex-col items-center justify-center gap-3 border-t border-white/10 pt-4 text-sm font-bold text-slate-300 sm:flex-row sm:gap-6">
-          <Link to="/login" className="text-amber-200 hover:text-amber-100">
+          <Link to="/login" className="text-amber-200">
             Already have an account?
           </Link>
         </div>

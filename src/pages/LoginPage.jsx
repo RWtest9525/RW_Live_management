@@ -28,7 +28,7 @@ function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08040d] px-4 py-4 text-white lg:h-screen lg:py-6">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08040d] px-4 py-4 text-white lg:h-screen lg:py-6 select-none">
       <div className="absolute -left-24 top-8 h-[360px] w-[360px] rounded-full bg-violet-600/35 blur-3xl" />
       <div className="absolute -right-20 bottom-0 h-[420px] w-[420px] rounded-full bg-amber-400/25 blur-3xl" />
       <div className="absolute left-1/2 top-0 h-[260px] w-[700px] -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl" />
@@ -117,10 +117,10 @@ function LoginPage() {
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-4 text-[14px]">
-            <Link to="/forgot-password" className="font-bold text-amber-200 hover:text-amber-100">
+            <Link to="/forgot-password" className="font-bold text-amber-200">
               Forgot password?
             </Link>
-            <Link to="/signup" className="font-bold text-slate-300 hover:text-white">
+            <Link to="/signup" className="font-bold text-slate-300">
               Create account
             </Link>
           </div>
@@ -128,7 +128,7 @@ function LoginPage() {
           <button
             type="submit"
             disabled={authLoading}
-            className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#7c2cff] via-[#d158ff] to-[#ffb21a] py-3 text-[14px] font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-violet-950/40 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#7c2cff] via-[#d158ff] to-[#ffb21a] py-3 text-[14px] font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-violet-950/40 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {authLoading ? 'Logging in...' : 'Login to Dashboard'}
           </button>
