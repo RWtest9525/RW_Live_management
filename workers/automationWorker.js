@@ -65,10 +65,11 @@ const getProofFolderId = (proof) => {
 
 const buildTelegramExcelLink = async ({ appData, reportDate, fallbackUrl }) => {
   try {
-    const latestProof = localDb
-      .prepare('SELECT * FROM proofs WHERE appId = ? ORDER BY createdAt DESC LIMIT 1')
-      .get(appData.id)
-    const parentFolderId = getProofFolderId(latestProof)
+    const parentFolderId = appData.driveFolderId
+    if (!parentFolderId) {
+      console.warn(`[telegram] driveFolderId not set for app ${appData.id}`)
+      return fallbackUrl
+    }
     const reviews = getVerifiedReviewsForAppDate({ appId: appData.id, date: reportDate })
     const { buffer, fileName } = buildReviewExcelBuffer({
       reviews,
