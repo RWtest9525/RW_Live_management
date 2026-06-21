@@ -234,11 +234,13 @@ export const notifyAppSyncComplete = async (appData, result = {}) => {
     reportLinks,
   ].join('\n')
 
+  localDb
+    .prepare('UPDATE apps SET telegramNotifiedAt = ?, telegramNotifiedKey = ? WHERE id = ?')
+    .run(new Date().toISOString(), notifyKey, appData.id)
+
   const sent = await sendTelegramMessage({ botToken: ownerBotToken, chatId: ownerChatId, message })
-  if (sent) {
-    localDb
-      .prepare('UPDATE apps SET telegramNotifiedAt = ?, telegramNotifiedKey = ? WHERE id = ?')
-      .run(new Date().toISOString(), notifyKey, appData.id)
+  if (!sent) {
+    console.warn(`[telegram] Failed to send final list Telegram message for app ${appData.id}`)
   }
 }
 
