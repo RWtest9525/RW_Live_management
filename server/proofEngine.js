@@ -165,7 +165,10 @@ export const generateProofForApp = async (appData, targetDay = 7, options = {}) 
 
   let dateFolderName = new Date(proofTimestamp).toISOString().slice(0, 10)
 
-  const browser = await chromium.launch({ headless: true })
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+  })
   const viewW = 1920
   const viewH = 1080
   let context = await browser.newContext({
