@@ -1,0 +1,30 @@
+[
+  {
+    "id": "admin-001",
+    "name": "REVIEWS WORLD",
+    "email": "reviewsworld01@gmail.com",
+    "phone": "",
+    "passwordHash": "$2b$10$ehq.SCzUNMIFlaAUxsrH2OMqrmkIbGQgzdKCvJqtK1wWPxvK0DYbC",
+    "role": "admin",
+    "accessPlan": "lifetime",
+    "validUntil": null,
+    "status": "active",
+    "driveFolderId": "1hE_1K11JmtX28AnsEJyygYtDtFDyiLxl",
+    "createdAt": "2026-05-08T08:55:49.434Z",
+    "backupFolderId": "10Uh3nrd-517DvLaITjU3eEHhFij0qIwO"
+  },
+  {
+    "id": "user-1778353947901",
+    "name": "Yash Vishal",
+    "email": "yashvishal647@gmail.com",
+    "phone": "9525182488",
+    "passwordHash": "$2b$10$XYXt3ZLzf8t8WdgUqNfUMu7r7KAcGMv2ZXOzELyV3URSvfjE3klky",
+    "role": "user",
+    "accessPlan": "trial",
+    "validUntil": "2026-06-08T19:12:27.901Z",
+    "status": "active",
+    "driveFolderId": "1K9sN5tMOlbBtZMC9MUl8CWXIjoEjlxlq",
+    "createdAt": "2026-05-09T19:12:27.901Z",
+    "lastPasswordResetAt": "2026-06-01T16:20:11.533Z"
+  }
+]

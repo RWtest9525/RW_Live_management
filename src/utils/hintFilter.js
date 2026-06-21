@@ -1,18 +1,9 @@
-const ALPHANUMERIC_REGEX = /^[a-z0-9]$/i
+import {
+  matchesNoHintRule,
+  matchesStrictTrailingHint,
+} from '../../shared/reviewHints.js'
 
-const stripLeadingSpaces = (value) => value.trimStart()
+export const matchesHintWise = (input, hintSymbol) =>
+  matchesStrictTrailingHint(String(input ?? '').trimEnd(), hintSymbol)
 
-export const matchesHintWise = (input, hintSymbol) => {
-  const normalized = stripLeadingSpaces(input)
-  if (!normalized || !hintSymbol) return false
-  if (!normalized.startsWith(hintSymbol)) return false
-  return normalized[hintSymbol.length] !== hintSymbol
-}
-
-export const matchesNoHint = (input) => {
-  const normalized = stripLeadingSpaces(input)
-  if (!normalized) return false
-  if (normalized.startsWith('..')) return false
-  if (normalized[0] === '.') return normalized[1] !== '.'
-  return ALPHANUMERIC_REGEX.test(normalized[0])
-}
+export const matchesNoHint = (input) => matchesNoHintRule(String(input ?? '').trimEnd())

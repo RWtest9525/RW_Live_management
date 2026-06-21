@@ -1,4 +1,5 @@
 import { authenticateUser, createSessionToken } from '../server/auth.js'
+import { getSubscriptionSummary } from '../server/subscription.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -7,27 +8,25 @@ export default async function handler(req, res) {
 
   try {
     const { email, password } = req.body ?? {}
+    console.log('Login attempt for:', email)
     const user = await authenticateUser({ email, password })
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials or expired access.' })
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
+    if (user.status !== 'active') {
+      return res.status(403).json({ error: 'Account is deactivated' })
     }
 
     const token = createSessionToken(user)
     return res.status(200).json({
       ok: true,
       token,
-      user: {
-        id: user.id,
-        name: user.name ?? '',
-        email: user.email,
-        phone: user.phone ?? '',
-        role: user.role ?? 'user',
-        accessPlan: user.accessPlan ?? 'trial',
-        validUntil: user.validUntil ?? null,
-        driveFolderId: user.driveFolderId ?? null,
-      },
+      user,
+      subscription: getSubscriptionSummary(user),
     })
   } catch (error) {
+    console.error('Login error:', error)
     return res.status(500).json({ error: error.message })
   }
 }

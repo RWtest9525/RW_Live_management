@@ -78,3 +78,14 @@ export const signupRequest = async ({
   if (!response.ok) throw new Error(payload.error ?? 'Signup failed')
   return payload
 }
+
+export const requestPasswordReset = async ({ identifier, passwordType, step }) => {
+  const response = await fetch('/api/auth-forgot-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identifier, passwordType, step }),
+  })
+  const payload = await parseApiPayload(response)
+  if (!response.ok) throw new Error(payload.error ?? 'Reset request failed')
+  return payload
+}

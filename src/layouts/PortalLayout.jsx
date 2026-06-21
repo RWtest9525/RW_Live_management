@@ -1,73 +1,324 @@
-import { useEffect } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import usePortalStore from '../store/usePortalStore'
+import Logo from '../components/Logo'
+import { shouldPollAppsForSync } from '../utils/appSync'
 
 const navItems = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Money Tracker', path: '/money-tracker' },
-  { label: 'App Monitor', path: '/app-monitor' },
-  { label: 'Worker Panel', path: '/worker-panel' },
-  { label: 'Proof Gallery', path: '/proof-gallery' },
+  { label: 'Dashboard', path: '/dashboard', icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011-1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+    </svg>
+  )},
+  { label: 'Money Tracker', path: '/money-tracker', icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+      <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+    </svg>
+  )},
+  { label: 'App Monitor', path: '/app-monitor', icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm2 1a1 1 0 00-1 1v6a1 1 0 001 1h10a1 1 0 001-1V7a1 1 0 00-1-1H5z" clipRule="evenodd" />
+    </svg>
+  )},
+  { label: 'Proof Gallery', path: '/proof-gallery', icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+    </svg>
+  )},
+  { label: 'Billing', path: '/billing', userOnly: true, icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+      <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h4a1 1 0 100-2H9z" clipRule="evenodd" />
+    </svg>
+  )},
+  { label: 'Manage Subscriptions', path: '/admin-subscriptions', adminOnly: true, icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+      <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zm-8 1a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1H8a1 1 0 110-2h1v-1a1 1 0 011-1z" clipRule="evenodd" />
+    </svg>
+  )},
+  { label: 'Client Management', path: '/clients', icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a7 7 0 00-7 7v1h11v-1a7 7 0 00-7-7z" />
+    </svg>
+  )},
+  { label: 'Password Requests', path: '/password-requests', adminOnly: true, icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+    </svg>
+  )},
+  { label: 'Worker Panel', path: '/worker-panel', adminOnly: true, icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+    </svg>
+  )},
+  { label: 'Forgot Password', path: '/support/forgot-password', icon: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+    </svg>
+  )},
 ]
 
 function PortalLayout() {
   const logout = usePortalStore((state) => state.logout)
-  const initializeFirestore = usePortalStore((state) => state.initializeFirestore)
   const currentUser = usePortalStore((state) => state.currentUser)
-  const firestoreError = usePortalStore((state) => state.firestoreError)
+  const loadInitialData = usePortalStore((state) => state.loadInitialData)
+  const fetchLocalReviews = usePortalStore((state) => state.fetchLocalReviews)
+  const isAuthenticated = usePortalStore((state) => state.isAuthenticated)
+  const theme = usePortalStore((state) => state.theme)
+  const toggleTheme = usePortalStore((state) => state.toggleTheme)
   const navigate = useNavigate()
+  const location = useLocation()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    initializeFirestore()
-  }, [initializeFirestore])
+    if (!isAuthenticated) return undefined
+    const id = setInterval(() => {
+      if (shouldPollAppsForSync(usePortalStore.getState().apps)) {
+        if (location.pathname.startsWith('/app/')) {
+          const appId = location.pathname.split('/')[2]
+          if (appId) {
+            void fetchLocalReviews(appId)
+          }
+        } else {
+          void loadInitialData()
+        }
+      }
+    }, 8000)
+    return () => clearInterval(id)
+  }, [fetchLocalReviews, isAuthenticated, loadInitialData, location.pathname])
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [location.pathname])
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
+    if (window.confirm('Are you sure you want to logout?')) {
+      logout()
+      navigate('/login')
+    }
   }
 
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.adminOnly && currentUser?.role !== 'admin') return false
+    if (item.userOnly && currentUser?.role !== 'user') return false
+    return true
+  })
+
   return (
-    <div className="flex min-h-screen bg-slate-100">
-      <aside className="w-64 border-r border-slate-200 bg-slate-950 p-5 text-white">
-        <h1 className="mb-8 text-2xl font-bold">Review World</h1>
-        <nav className="space-y-2">
-          {navItems.map((item) => (
+    <div className={`flex min-h-screen transition-colors duration-200 ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
+      {/* Desktop Sidebar */}
+      <aside className={`hidden md:flex w-64 border-r flex-col transition-colors duration-200 ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'} p-5 sticky top-0 h-screen`}>
+        {/* ... (keep desktop sidebar content same) ... */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex items-center gap-3 mb-8">
+            <Logo className="h-10 w-10" />
+            <h1 className={`text-xl font-black uppercase tracking-tighter ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Review World</h1>
+          </div>
+          <nav className="space-y-1">
+            {filteredNavItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                      : theme === 'dark'
+                        ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`
+                }
+              >
+                {item.icon}
+                {item.label}
+              </NavLink>
+            ))}
+            
+            <button
+              onClick={toggleTheme}
+              className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                theme === 'dark'
+                  ? 'text-yellow-400 hover:bg-slate-800'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {theme === 'dark' ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                  </svg>
+                  <span>Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                  </svg>
+                  <span>Dark Mode</span>
+                </>
+              )}
+            </button>
+          </nav>
+        </div>
+
+        <div className="mt-auto space-y-4 pt-4 border-t border-slate-800/20">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-bold transition-all ${
+              theme === 'dark'
+                ? 'text-rose-400 hover:bg-rose-500/10'
+                : 'text-rose-600 hover:bg-rose-50'
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Logout
+          </button>
+          
+          <div className="flex items-center justify-center pt-2 opacity-30">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Reviews World v2.0</span>
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile App View (Bottom Bar & Modern Layout) */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen relative">
+        {/* Mobile App Header */}
+        <header className={`md:hidden flex items-center justify-between px-6 py-5 sticky top-0 z-40 ${theme === 'dark' ? 'bg-slate-950/80' : 'bg-white/80'} backdrop-blur-xl border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Logo className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h2 className={`text-lg font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>RW Monitor</h2>
+              <div className="flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">System Live</span>
+              </div>
+            </div>
+          </div>
+          <button 
+            onClick={toggleTheme}
+            className={`p-2.5 rounded-2xl transition-all ${theme === 'dark' ? 'bg-slate-900 text-yellow-400 border border-slate-800' : 'bg-slate-50 text-slate-600 border border-slate-200'}`}
+          >
+            {theme === 'dark' ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+              </svg>
+            )}
+          </button>
+        </header>
+
+        {/* Desktop Header */}
+        <header className={`hidden md:flex items-center justify-between border-b px-6 py-4 transition-colors duration-200 sticky top-0 z-30 ${theme === 'dark' ? 'border-slate-800 bg-slate-900/80 backdrop-blur-md' : 'border-slate-200 bg-white/80 backdrop-blur-md'}`}>
+          <div className="flex flex-col">
+            <p className={`text-lg font-black uppercase tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Management Portal</p>
+            <p className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+              {currentUser?.email}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`flex flex-col items-end mr-2`}>
+              <p className={`text-xs font-black uppercase ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{currentUser?.name}</p>
+              <p className={`text-[8px] font-bold uppercase tracking-tighter px-1.5 py-0.5 rounded-full ${theme === 'dark' ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>{currentUser?.role}</p>
+            </div>
+            <div className={`h-10 w-10 rounded-full border-2 border-blue-500/20 flex items-center justify-center font-black text-sm ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white text-slate-900'}`}>
+              {currentUser?.name?.charAt(0) || 'U'}
+            </div>
+          </div>
+        </header>
+        
+        {/* Main Content Scroll Area */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-32 md:pb-6 scroll-smooth">
+          <Outlet />
+        </main>
+
+        {/* Mobile App Bottom Tab Bar */}
+        <nav className={`md:hidden fixed bottom-6 left-4 right-4 z-50 h-20 rounded-3xl border shadow-2xl transition-all duration-300 ${theme === 'dark' ? 'bg-slate-900/90 border-slate-800 shadow-slate-950' : 'bg-white/90 border-slate-200 shadow-slate-200'} backdrop-blur-xl flex items-center justify-around px-4`}>
+          {filteredNavItems.slice(0, 5).map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `block rounded-lg px-3 py-2 text-sm transition ${isActive ? 'bg-blue-500 text-white' : 'text-slate-300 hover:bg-slate-800'}`
+                `flex flex-col items-center justify-center gap-1.5 transition-all duration-300 ${
+                  isActive
+                    ? 'text-blue-500 transform -translate-y-1'
+                    : theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'
+                }`
               }
             >
-              {item.label}
+              <div className={`p-2 rounded-2xl transition-all ${location.pathname === item.path ? 'bg-blue-500/10' : ''}`}>
+                {item.icon}
+              </div>
+              <span className="text-[9px] font-black uppercase tracking-tighter">{item.label.split(' ')[0]}</span>
             </NavLink>
           ))}
-        </nav>
-      </aside>
-      <div className="flex-1">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-          <div>
-            <p className="text-lg font-semibold text-slate-800">Business Management Portal</p>
-            <p className="text-xs text-slate-500">
-              {currentUser?.email} ({currentUser?.role ?? 'user'})
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          
+          {/* Mobile Profile/More Button */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className={`flex flex-col items-center justify-center gap-1.5 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}
           >
-            Logout
-          </button>
-        </header>
-        <main className="p-6">
-          {firestoreError ? (
-            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              {firestoreError}
+            <div className="p-2 rounded-2xl">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
             </div>
-          ) : null}
-          <Outlet />
-        </main>
+            <span className="text-[9px] font-black uppercase tracking-tighter">More</span>
+          </button>
+        </nav>
+
+        {/* Mobile App Fullscreen Overlay Menu (For "More" options) */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 z-[60] animate-in fade-in duration-300">
+            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={() => setIsMobileMenuOpen(false)} />
+            <div className={`absolute bottom-0 left-0 right-0 rounded-t-[40px] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom-full duration-500 ${theme === 'dark' ? 'bg-slate-900 border-t border-slate-800' : 'bg-white border-t border-slate-200'}`}>
+              <div className="flex items-center justify-between mb-8">
+                <h3 className={`text-xl font-black uppercase tracking-widest ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Menu</h3>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-full bg-slate-800/50 text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {filteredNavItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-4 p-4 rounded-3xl border transition-all ${
+                      theme === 'dark' ? 'bg-slate-800/50 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    <div className="text-blue-500">{item.icon}</div>
+                    <span className="text-xs font-black uppercase tracking-tight">{item.label}</span>
+                  </NavLink>
+                ))}
+                
+                <button
+                  onClick={handleLogout}
+                  className={`col-span-2 flex items-center justify-center gap-3 p-5 rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-500 font-black uppercase tracking-widest mt-4`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Logout Session
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

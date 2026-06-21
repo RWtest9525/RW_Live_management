@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import AppReviewCard from './AppReviewCard'
+import PlayStoreReviewsPanel from './PlayStoreReviewsPanel'
+import PlayStoreReviewRow from './PlayStoreReviewRow'
 
-function InfiniteReviewList({ reviews }) {
+function InfiniteReviewList({ reviews, app }) {
   const [visibleCount, setVisibleCount] = useState(4)
   const loaderRef = useRef(null)
 
@@ -26,14 +27,25 @@ function InfiniteReviewList({ reviews }) {
   }, [hasMore, reviews.length])
 
   return (
-    <div className="space-y-3">
+    <PlayStoreReviewsPanel
+      appName={app?.name ?? 'App'}
+      appIcon={app?.icon}
+      showCloseButton={false}
+      footer={
+        <div ref={loaderRef} className="py-4 text-center text-[13px] text-[#5f6368]">
+          {hasMore ? 'Loading more reviews…' : reviews.length ? 'No more reviews' : ''}
+        </div>
+      }
+    >
       {visibleReviews.map((review, index) => (
-        <AppReviewCard key={review.id} review={review} index={index} />
+        <PlayStoreReviewRow
+          key={review.id ?? `${index}`}
+          review={review}
+          index={index}
+          developerName={app?.developer}
+        />
       ))}
-      <div ref={loaderRef} className="py-3 text-center text-sm text-slate-500">
-        {hasMore ? 'Loading more reviews...' : 'No more reviews'}
-      </div>
-    </div>
+    </PlayStoreReviewsPanel>
   )
 }
 

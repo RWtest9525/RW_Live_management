@@ -1,55 +1,63 @@
 import axios from 'axios'
-import { adminDb } from '../server/firebaseAdmin.js'
+import localDb from '../server/localDb.js'
 
 const webhookUrl = process.env.DAILY_REPORT_WEBHOOK_URL
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
 const telegramChatId = process.env.TELEGRAM_CHAT_ID
 
 const buildDailySummary = async () => {
-  const [appsSnapshot, reviewsSnapshot, proofsSnapshot] = await Promise.all([
-    adminDb.collection('apps').get(),
-    adminDb.collection('reviews').get(),
-    adminDb.collection('proofs').get(),
-  ])
-  const totalApps = appsSnapshot.size
-  const totalLive = reviewsSnapshot.docs.filter(
-    (doc) => doc.data().status === 'VERIFIED LIVE',
-  ).length
-  const totalDrops = reviewsSnapshot.docs.filter(
-    (doc) => doc.data().status === 'DROPPED',
-  ).length
+  try {
+    const apps = localDb.prepare('SELECT count(*) as count FROM apps').get()
+    const reviews = localDb.prepare('SELECT count(*) as count FROM reviews WHERE status = "VERIFIED LIVE"').get()
+    const drops = localDb.prepare('SELECT count(*) as count FROM reviews WHERE status = "DROPPED"').get()
+    const proofs = localDb.prepare('SELECT count(*) as count FROM proofs WHERE createdAt >= ?').get(new Date().toDateString())
 
-  const todayKey = new Date().toDateString()
-  const videosGenerated = proofsSnapshot.docs.filter((doc) => {
-    const date = doc.data().createdAt?.toDate?.()
-    if (!date) return false
-    return date.toDateString() === todayKey
-  }).length
-
-  return {
-    totalApps,
-    totalLive,
-    totalDrops,
-    videosGenerated,
+    return {
+      totalApps: apps?.count || 0,
+      totalLive: reviews?.count || 0,
+      totalDrops: drops?.count || 0,
+      videosGenerated: proofs?.count || 0,
+    }
+  } catch (err) {
+    console.error('Error building summary from localDb:', err.message)
+    return {
+      totalApps: 0,
+      totalLive: 0,
+      totalDrops: 0,
+      videosGenerated: 0,
+    }
   }
 }
 
 const sendDailyReport = async (summary) => {
-  const text = `Total apps monitored today: ${summary.totalApps}. Total Live: ${summary.totalLive}. Drops: ${summary.totalDrops}. Videos Generated: ${summary.videosGenerated}.`
+  const text = `Review World Daily Report\n\nTotal apps monitored today: ${summary.totalApps}.\nTotal Live: ${summary.totalLive}.\nDrops: ${summary.totalDrops}.\nVideos Generated: ${summary.videosGenerated}.`
   let delivered = false
 
+  console.log('Attempting to send daily report...')
+  console.log(`Telegram Token exists: ${!!telegramBotToken}`)
+  console.log(`Telegram Chat ID: ${telegramChatId}`)
+
   if (telegramBotToken && telegramChatId) {
-    const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`
-    await axios.post(telegramUrl, {
-      chat_id: telegramChatId,
-      text: `Review World Daily Report\n\n${text}`,
-    })
-    delivered = true
+    try {
+      const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`
+      const response = await axios.post(telegramUrl, {
+        chat_id: telegramChatId,
+        text: text,
+      })
+      console.log('Telegram response:', response.data)
+      delivered = true
+    } catch (error) {
+      console.error('Telegram send failed:', error.response?.data || error.message)
+    }
   }
 
   if (webhookUrl) {
-    await axios.post(webhookUrl, { text, summary, primary: 'telegram' })
-    delivered = true
+    try {
+      await axios.post(webhookUrl, { text, summary, primary: 'telegram' })
+      delivered = true
+    } catch (error) {
+      console.error('Webhook send failed:', error.message)
+    }
   }
 
   return delivered

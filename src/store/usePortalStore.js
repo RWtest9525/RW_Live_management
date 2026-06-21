@@ -1,13 +1,4 @@
 import { create } from 'zustand'
-import { mockApps, mockProofs, mockWorkers } from '../data/mockData'
-import {
-  seedAppsIfMissing,
-  subscribeApps,
-  subscribeProofs,
-  subscribeReviews,
-  subscribeUsers,
-  updateAppRate,
-} from '../services/firestorePortal'
 import {
   clearToken,
   getStoredToken,
@@ -17,18 +8,22 @@ import {
 } from '../services/authApi'
 
 const getTotals = (apps, reviews) => {
-  const verifiedLive = reviews.filter((review) => review.status === 'VERIFIED LIVE').length
-  const dropped = reviews.filter((review) => review.status === 'DROPPED').length
-  const activeLinks = apps.filter((app) => app.active).length
+  let verifiedLive = 0
+  let dropped = 0
+  const liveCountsByAppId = new Map()
+
+  for (const review of reviews) {
+    if (review.status === 'VERIFIED LIVE') {
+      verifiedLive += 1
+      liveCountsByAppId.set(review.appId, (liveCountsByAppId.get(review.appId) || 0) + 1)
+    } else if (review.status === 'DROPPED') {
+      dropped += 1
+    }
+  }
+
+  const activeLinks = apps.filter((app) => app.monitoringStatus === 'ACTIVE').length
   const totalRevenue = apps.reduce(
-    (sum, app) =>
-      sum +
-      reviews.filter(
-        (review) =>
-          review.appId === app.id &&
-          review.status === 'VERIFIED LIVE',
-      ).length *
-        Number(app.ratePerReview ?? 0),
+    (sum, app) => sum + (liveCountsByAppId.get(app.id) || 0) * Number(app.ratePerReview ?? 0),
     0,
   )
 
@@ -40,20 +35,44 @@ const getTotals = (apps, reviews) => {
   }
 }
 
+const fetchJsonWithAuth = async (url, token) => {
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const payload = await response.json()
+  if (!response.ok) {
+    throw new Error(payload?.error || `Request failed: ${url}`)
+  }
+  return payload
+}
+
 const usePortalStore = create((set, get) => ({
   isAuthenticated: false,
-  authLoading: false,
+  authLoading: !!localStorage.getItem('rw_session_token'),
   authError: '',
-  firestoreError: '',
   token: '',
   currentUser: null,
-  apps: mockApps,
+  apps: [],
   reviews: [],
-  workers: mockWorkers,
   users: [],
-  proofs: mockProofs,
+  proofs: [],
+  clients: [],
+  theme: localStorage.getItem('portal-theme') || 'light',
   subscriptionsReady: false,
   syncState: {},
+  setCurrentUser: (user) => set({ currentUser: user }),
+  refreshCurrentUser: async () => {
+    const token = get().token || getStoredToken()
+    if (!token) return null
+    const response = await meRequest(token)
+    set({ currentUser: response.user })
+    return response.user
+  },
+  toggleTheme: () => {
+    const nextTheme = get().theme === 'light' ? 'dark' : 'light'
+    localStorage.setItem('portal-theme', nextTheme)
+    set({ theme: nextTheme })
+  },
   login: async ({ email, password }) => {
     set({ authLoading: true, authError: '' })
     try {
@@ -66,15 +85,7 @@ const usePortalStore = create((set, get) => ({
         authLoading: false,
         authError: '',
       })
-      try {
-        await get().initializeFirestore()
-      } catch (error) {
-        set({
-          firestoreError:
-            error.message ??
-            'Login succeeded, but app data could not be loaded from Firestore.',
-        })
-      }
+      await get().loadInitialData()
       return { ok: true }
     } catch (error) {
       set({
@@ -100,15 +111,7 @@ const usePortalStore = create((set, get) => ({
         authLoading: false,
         authError: '',
       })
-      try {
-        await get().initializeFirestore()
-      } catch (error) {
-        set({
-          firestoreError:
-            error.message ??
-            'Session restored, but app data could not be loaded from Firestore.',
-        })
-      }
+      await get().loadInitialData()
     } catch {
       clearToken()
       set({
@@ -117,64 +120,140 @@ const usePortalStore = create((set, get) => ({
         currentUser: null,
         authLoading: false,
         authError: '',
-        firestoreError: '',
       })
     }
   },
   logout: () => {
     clearToken()
-    const unsubs = get()._firestoreUnsubs ?? []
-    unsubs.forEach((fn) => fn?.())
     set({
       isAuthenticated: false,
       token: '',
       currentUser: null,
       authError: '',
-      firestoreError: '',
       subscriptionsReady: false,
       apps: [],
       reviews: [],
       proofs: [],
       users: [],
-      _firestoreUnsubs: [],
+      clients: [],
     })
   },
-  initializeFirestore: async () => {
-    if (get().subscriptionsReady) return
-    const currentUser = get().currentUser
-    if (!currentUser) return
-    await seedAppsIfMissing()
-    const isAdmin = currentUser.role === 'admin'
-    const unsubs = [
-      subscribeApps({
-        ownerUserId: currentUser.id,
-        isAdmin,
-        onData: (apps) => set({ apps }),
-      }),
-      subscribeReviews({
-        ownerUserId: currentUser.id,
-        isAdmin,
-        onData: (reviews) => set({ reviews }),
-      }),
-      subscribeProofs({
-        ownerUserId: currentUser.id,
-        isAdmin,
-        onData: (proofs) => set({ proofs }),
-      }),
-    ]
-    if (isAdmin) {
-      unsubs.push(subscribeUsers((users) => set({ users })))
+  loadInitialData: async (filterUserId = null) => {
+    const token = get().token || getStoredToken()
+    if (!token) return
+
+    const isAdmin = get().currentUser?.role === 'admin'
+    const userQuery = filterUserId ? `&userId=${filterUserId}` : ''
+
+    try {
+      const listFetches = [
+        fetchJsonWithAuth(`/api/data?type=apps${userQuery}`, token),
+        fetchJsonWithAuth(`/api/data?type=clients${userQuery}`, token),
+        fetchJsonWithAuth(`/api/data?type=proofs${userQuery}`, token),
+      ]
+      
+      if (isAdmin) {
+        listFetches.push(fetchJsonWithAuth('/api/data?type=users', token))
+      }
+
+      const [apps, clients, proofs, users] = await Promise.all(listFetches)
+
+      // Sort clients alphabetically by name
+      const sortedClients = (clients || []).sort((a, b) => 
+        (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })
+      )
+
+      set({ 
+        apps: Array.isArray(apps) ? apps : [],
+        clients: sortedClients, 
+        proofs: Array.isArray(proofs) ? proofs : [],
+        users: Array.isArray(users) ? users : [],
+        subscriptionsReady: true 
+      })
+
+      fetchJsonWithAuth(`/api/data?type=reviews${userQuery}`, token)
+        .then((reviews) => {
+          set({ reviews: Array.isArray(reviews) ? reviews : [] })
+        })
+        .catch((error) => {
+          console.error('Failed to load reviews:', error)
+        })
+    } catch (error) {
+      console.error('Failed to load initial data:', error)
+      set({
+        apps: [],
+        clients: [],
+        proofs: [],
+        reviews: [],
+        users: [],
+      })
     }
-    set({
-      subscriptionsReady: true,
-      _firestoreUnsubs: unsubs,
-      firestoreError: '',
-    })
+  },
+  refreshPortalLists: async (filterUserId = null) => {
+    const token = get().token || getStoredToken()
+    if (!token) return
+
+    const isAdmin = get().currentUser?.role === 'admin'
+    const userQuery = filterUserId ? `&userId=${filterUserId}` : ''
+
+    try {
+      const fetchUrls = [
+        fetchJsonWithAuth(`/api/data?type=apps${userQuery}`, token),
+        fetchJsonWithAuth(`/api/data?type=clients${userQuery}`, token),
+        fetchJsonWithAuth(`/api/data?type=proofs${userQuery}`, token),
+      ]
+
+      if (isAdmin) {
+        fetchUrls.push(fetchJsonWithAuth('/api/data?type=users', token))
+      }
+
+      const [apps, clients, proofs, users] = await Promise.all(fetchUrls)
+      const sortedClients = (clients || []).sort((a, b) =>
+        (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }),
+      )
+
+      set({
+        apps: Array.isArray(apps) ? apps : [],
+        clients: sortedClients,
+        proofs: Array.isArray(proofs) ? proofs : [],
+        users: Array.isArray(users) ? users : get().users,
+        subscriptionsReady: true,
+      })
+    } catch (error) {
+      console.error('Failed to refresh portal lists:', error)
+    }
+  },
+  // NEW: Fetch reviews from Local SQLite API
+  fetchLocalReviews: async (appId) => {
+    try {
+      const token = get().token || localStorage.getItem('rw_session_token');
+      const response = await fetch(`/api/get-local-reviews?appId=${appId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch local reviews');
+      const data = await response.json();
+      
+      const safeReviews = Array.isArray(get().reviews) ? get().reviews : [];
+      const safeData = Array.isArray(data) ? data : [];
+      const otherReviews = safeReviews.filter((r) => r.appId !== appId);
+      set({ reviews: [...otherReviews, ...safeData] });
+    } catch (error) {
+      console.error('Error fetching local reviews:', error);
+    }
   },
   setRatePerReview: async (appId, nextRate) => {
-    const parsedRate = Number(nextRate)
-    if (Number.isNaN(parsedRate) || parsedRate < 0) return
-    await updateAppRate(appId, parsedRate)
+    const token = get().token || getStoredToken()
+    await fetch('/api/data', {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ type: 'app', id: appId, ratePerReview: nextRate })
+    })
+    get().loadInitialData()
   },
   getDashboardStats: () => {
     const { apps, reviews } = get()

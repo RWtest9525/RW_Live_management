@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +25,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.vercel
+
+# SQLite Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Temporary Proofs
+.tmp-proof/
+.tmp-proof/*

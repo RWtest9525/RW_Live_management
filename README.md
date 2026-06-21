@@ -19,8 +19,9 @@ A comprehensive monitoring system for Play Store reviews with automated proof ge
 
 2. **Environment Variables**:
    Copy `.env.example` to `.env` and fill in the required values:
-   - `FIREBASE_SERVICE_ACCOUNT_JSON`: Your Firebase Service Account JSON string.
-   - `GOOGLE_DRIVE_FOLDER_ID`: The root folder ID where proofs will be stored.
+   - `GOOGLE_SERVICE_ACCOUNT_JSON`: GCP service account JSON (string) used for Drive API (JWT).
+   - `GOOGLE_DRIVE_FOLDER_ID`: Shared Drive folder ID (service account must be Editor); parent for uploads.
+   - If you previously stored the service account under a different env key, move that JSON string into `GOOGLE_SERVICE_ACCOUNT_JSON`.
    - `PORTAL_BASE_URL`: The URL where the app is hosted (used for proof generation).
    - `CRON_SECRET`: A secret string to protect your automation endpoints.
 
@@ -49,4 +50,4 @@ A comprehensive monitoring system for Play Store reviews with automated proof ge
 ## 📦 Dependencies
 
 - **Frontend**: React 19, Tailwind CSS 4, Zustand.
-- **Backend**: Firebase Admin, Playwright, fluent-ffmpeg, google-play-scraper.
+- **Backend**: Express, SQLite (better-sqlite3), Google Drive API, Playwright, fluent-ffmpeg, google-play-scraper.

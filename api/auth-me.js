@@ -1,4 +1,5 @@
 import { readAuthUserFromRequest } from '../server/auth.js'
+import { getSubscriptionSummary } from '../server/subscription.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -20,6 +21,7 @@ export default async function handler(req, res) {
         validUntil: user.validUntil ?? null,
         driveFolderId: user.driveFolderId ?? null,
       },
+      subscription: getSubscriptionSummary(user),
     })
   } catch (error) {
     return res.status(500).json({ error: error.message })
