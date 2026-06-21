@@ -93,6 +93,39 @@ function SignupPage() {
     }
   }
 
+  const handlePhoneChange = (val) => {
+    const normalizedCountry = form.country.trim().toLowerCase()
+    const matchedKey = Object.keys(countryCodes).find((k) => normalizedCountry.includes(k))
+    
+    if (matchedKey) {
+      const code = countryCodes[matchedKey]
+      let maxDigits = 10
+      if (['uae', 'united arab emirates', 'australia', 'france'].includes(matchedKey)) {
+        maxDigits = 9
+      } else if (matchedKey === 'germany') {
+        maxDigits = 11
+      }
+      
+      const valNoSpace = val.replace(/\s+/g, '')
+      const codeNoSpace = code.replace(/\s+/g, '')
+      
+      if (valNoSpace.startsWith(codeNoSpace)) {
+        const remaining = valNoSpace.slice(codeNoSpace.length)
+        const digitsOnly = remaining.replace(/\D/g, '')
+        
+        if (digitsOnly.length > maxDigits) {
+          return
+        }
+        
+        const formatted = digitsOnly.length > 0 ? `${code} ${digitsOnly}` : `${code} `
+        update('phone', formatted)
+        return
+      }
+    }
+    
+    update('phone', val.slice(0, 16))
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     setError('')
@@ -158,9 +191,6 @@ function SignupPage() {
                 <p className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-amber-200">Create access</p>
               </div>
             </div>
-            <Link to="/login" className="rounded-full border border-white/12 bg-white/[0.08] px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-slate-200 hover:bg-white/12">
-              Login
-            </Link>
           </div>
 
           <p className="auth-cursive text-2xl font-bold text-amber-200">New control room account</p>
@@ -184,7 +214,7 @@ function SignupPage() {
                 label="Phone Number"
                 icon="phone"
                 value={form.phone}
-                onChange={(e) => update('phone', e.target.value)}
+                onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="+91 ..."
                 autoComplete="tel"
                 required
