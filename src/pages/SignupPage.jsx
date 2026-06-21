@@ -5,6 +5,39 @@ import { AuthField, PasswordToggle } from '../components/AuthField'
 import { signupRequest } from '../services/authApi'
 import usePortalStore from '../store/usePortalStore'
 
+const countryCodes = {
+  india: '+91',
+  'united states': '+1',
+  usa: '+1',
+  us: '+1',
+  'united kingdom': '+44',
+  uk: '+44',
+  canada: '+1',
+  bangladesh: '+880',
+  pakistan: '+92',
+  uae: '+971',
+  'united arab emirates': '+971',
+  australia: '+61',
+  germany: '+49',
+  france: '+33',
+}
+
+const getCountryFlag = (country) => {
+  const name = (country || '').trim().toLowerCase()
+  if (!name) return '🌐'
+  if (name.includes('india')) return '🇮🇳'
+  if (name.includes('united states') || name.includes('usa') || name.includes('us')) return '🇺🇸'
+  if (name.includes('united kingdom') || name.includes('uk') || name.includes('england')) return '🇬🇧'
+  if (name.includes('canada')) return '🇨🇦'
+  if (name.includes('bangladesh')) return '🇧🇩'
+  if (name.includes('pakistan')) return '🇵🇰'
+  if (name.includes('united arab emirates') || name.includes('uae')) return '🇦🇪'
+  if (name.includes('australia')) return '🇦🇺'
+  if (name.includes('germany')) return '🇩🇪'
+  if (name.includes('france')) return '🇫🇷'
+  return '🌐'
+}
+
 function SignupPage() {
   const isAuthenticated = usePortalStore((state) => state.isAuthenticated)
   const navigate = useNavigate()
@@ -27,6 +60,18 @@ function SignupPage() {
   }
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
+
+  const handleCountryChange = (val) => {
+    update('country', val)
+    const normalized = val.trim().toLowerCase()
+    const matched = Object.keys(countryCodes).find((k) => normalized.includes(k))
+    if (matched) {
+      const code = countryCodes[matched]
+      if (!form.phone || !form.phone.startsWith('+')) {
+        update('phone', `${code} `)
+      }
+    }
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -126,9 +171,9 @@ function SignupPage() {
               />
               <AuthField
                 label="Country"
-                icon="globe"
+                icon={getCountryFlag(form.country)}
                 value={form.country}
-                onChange={(e) => update('country', e.target.value)}
+                onChange={(e) => handleCountryChange(e.target.value)}
                 placeholder="India"
                 autoComplete="country-name"
                 required
@@ -214,9 +259,6 @@ function SignupPage() {
         <div className="mt-5 flex flex-col items-center justify-center gap-3 border-t border-white/10 pt-4 text-sm font-bold text-slate-300 sm:flex-row sm:gap-6">
           <Link to="/login" className="text-amber-200 hover:text-amber-100">
             Already have an account?
-          </Link>
-          <Link to="/forgot-password" className="text-slate-400 hover:text-white">
-            Forgot password?
           </Link>
         </div>
         </form>

@@ -133,10 +133,6 @@ function LoginPage() {
             {authLoading ? 'Logging in...' : 'Login to Dashboard'}
           </button>
 
-          <p className="mt-4 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-            Protected local command panel
-          </p>
-
           {authError ? (
             <p className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-200">
               {authError}
