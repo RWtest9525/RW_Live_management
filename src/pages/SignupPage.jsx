@@ -22,20 +22,40 @@ const countryCodes = {
   france: '+33',
 }
 
+const countryFlags = {
+  'india': 'in',
+  'united states': 'us',
+  'usa': 'us',
+  'us': 'us',
+  'united kingdom': 'gb',
+  'uk': 'gb',
+  'england': 'gb',
+  'canada': 'ca',
+  'bangladesh': 'bd',
+  'pakistan': 'pk',
+  'united arab emirates': 'ae',
+  'uae': 'ae',
+  'australia': 'au',
+  'germany': 'de',
+  'france': 'fr',
+}
+
 const getCountryFlag = (country) => {
   const name = (country || '').trim().toLowerCase()
-  if (!name) return '🌐'
-  if (name.includes('india')) return '🇮🇳'
-  if (name.includes('united states') || name.includes('usa') || name.includes('us')) return '🇺🇸'
-  if (name.includes('united kingdom') || name.includes('uk') || name.includes('england')) return '🇬🇧'
-  if (name.includes('canada')) return '🇨🇦'
-  if (name.includes('bangladesh')) return '🇧🇩'
-  if (name.includes('pakistan')) return '🇵🇰'
-  if (name.includes('united arab emirates') || name.includes('uae')) return '🇦🇪'
-  if (name.includes('australia')) return '🇦🇺'
-  if (name.includes('germany')) return '🇩🇪'
-  if (name.includes('france')) return '🇫🇷'
-  return '🌐'
+  if (!name) return 'globe'
+  
+  const matchedKey = Object.keys(countryFlags).find((key) => name.includes(key))
+  if (matchedKey) {
+    const code = countryFlags[matchedKey]
+    return (
+      <img
+        src={`https://flagcdn.com/w40/${code}.png`}
+        className="w-5 h-3.5 rounded-sm object-cover inline-block align-middle"
+        alt={name}
+      />
+    )
+  }
+  return 'globe'
 }
 
 function SignupPage() {
