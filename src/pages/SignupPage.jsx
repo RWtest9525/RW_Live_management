@@ -295,7 +295,7 @@ function SignupPage() {
 
         <button
           type="submit"
-          className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#7c2cff] via-[#b65cff] to-[#ffb21a] py-3 text-[14px] font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-violet-950/40 transition hover:scale-[1.01] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#7c2cff] via-[#b65cff] to-[#ffb21a] py-3 text-[14px] font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-violet-950/40 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={loading}
         >
           {loading ? 'Creating account...' : 'Create My Account'}

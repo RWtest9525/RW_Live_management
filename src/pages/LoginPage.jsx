@@ -128,7 +128,7 @@ function LoginPage() {
           <button
             type="submit"
             disabled={authLoading}
-            className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#7c2cff] via-[#d158ff] to-[#ffb21a] py-3 text-[14px] font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-violet-950/40 transition hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#7c2cff] via-[#d158ff] to-[#ffb21a] py-3 text-[14px] font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-violet-950/40 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {authLoading ? 'Logging in...' : 'Login to Dashboard'}
           </button>
