@@ -34,28 +34,28 @@ function StatCard({ title, value, tone }) {
   }
 
   return (
-    <div className={`group relative overflow-hidden rounded-[2.5rem] p-6 md:p-8 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl shadow-xl ${theme === 'dark' ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-100'}`}>
+    <div className={`group relative overflow-hidden rounded-2xl md:rounded-[2.5rem] p-4 md:p-8 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl shadow-xl ${theme === 'dark' ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-100'}`}>
       <div className={`absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br ${colors[tone]} opacity-5 transition-transform duration-700 group-hover:scale-150`} />
       
       <div className="relative z-10 flex flex-col justify-between h-full">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`rounded-2xl p-3 bg-gradient-to-br ${colors[tone]} shadow-lg`}>
-             {tone === 'blue' && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-             {tone === 'green' && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-             {tone === 'red' && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-             {tone === 'purple' && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>}
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <div className={`rounded-xl md:rounded-2xl p-2 md:p-3 bg-gradient-to-br ${colors[tone]} shadow-lg`}>
+             {tone === 'blue' && <svg className="h-5 w-5 md:h-6 md:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+             {tone === 'green' && <svg className="h-5 w-5 md:h-6 md:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+             {tone === 'red' && <svg className="h-5 w-5 md:h-6 md:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+             {tone === 'purple' && <svg className="h-5 w-5 md:h-6 md:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>}
           </div>
-          <span className={`text-[10px] font-black uppercase tracking-widest ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Realtime</span>
+          <span className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Realtime</span>
         </div>
         
         <div>
-          <p className={`text-sm font-bold uppercase tracking-widest mb-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{title}</p>
-          <h3 className={`text-3xl md:text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{value}</h3>
+          <p className={`text-[9px] md:text-sm font-bold uppercase tracking-widest mb-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{title}</p>
+          <h3 className={`text-lg md:text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{value}</h3>
         </div>
         
-        <div className="mt-4 pt-4 border-t border-slate-800/10 flex items-center gap-2">
+        <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-slate-800/10 flex items-center gap-2">
           <div className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${colors[tone]}`} />
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Live data stream</span>
+          <span className="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-wider">Live data stream</span>
         </div>
       </div>
     </div>
