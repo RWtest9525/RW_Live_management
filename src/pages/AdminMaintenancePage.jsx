@@ -158,8 +158,12 @@ function AdminMaintenancePage() {
             theme === 'dark' ? 'text-slate-300 hover:bg-slate-800/40' : 'text-slate-700 hover:bg-slate-50'
           }`}
         >
-          <span className="flex items-center gap-2">
-            ⚙️ Configure Maintenance Settings
+          <span className="flex items-center gap-2.5">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5 text-blue-500 animate-[spin_6s_linear_infinite]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Configure Maintenance Settings
           </span>
           <span className="text-[11px] font-bold lowercase text-slate-400">
             {showConfig ? 'Hide' : '+ Show'}
@@ -229,12 +233,15 @@ function AdminMaintenancePage() {
             </div>
 
             {/* Hint box */}
-            <div className={`rounded-xl border p-4 text-xs font-bold leading-5 ${
+            <div className={`rounded-xl border p-4 text-xs font-bold leading-5 flex items-start gap-3.5 ${
               theme === 'dark'
                 ? 'bg-blue-950/20 border-blue-900/40 text-blue-300'
                 : 'bg-blue-50 border-blue-100 text-blue-700'
             }`}>
-              💡 Users will see a full-screen maintenance page with countdown. Admin account will keep working normally.
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 mt-0.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span>Users will see a full-screen maintenance page with countdown. Admin account will keep working normally.</span>
             </div>
 
             {/* Control buttons */}
