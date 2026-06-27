@@ -439,34 +439,38 @@ function WorkerPanelPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => startEditing(worker)}
-                        className={`rounded-lg p-2 transition-all ${theme === 'dark' ? 'text-slate-400 hover:bg-slate-800 hover:text-blue-400' : 'text-slate-500 hover:bg-slate-100 hover:text-blue-600'}`}
+                        className="rounded-xl p-2 transition-all border text-blue-500 hover:bg-blue-500/15 bg-blue-500/5 border-blue-500/10"
                         title="Edit User"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
                       <button
                         onClick={() => toggleDeactivateUser(worker)}
-                        className={`rounded-lg p-2 transition-all ${worker.status === 'deactivated' ? 'text-emerald-500 hover:bg-emerald-50' : 'text-amber-500 hover:bg-amber-50'}`}
+                        className={`rounded-xl p-2 transition-all border ${
+                          worker.status === 'deactivated'
+                            ? 'text-emerald-500 hover:bg-emerald-500/15 bg-emerald-500/5 border-emerald-500/10'
+                            : 'text-rose-500 hover:bg-rose-500/15 bg-rose-500/5 border-rose-500/10'
+                        }`}
                         title={worker.status === 'deactivated' ? 'Activate User' : 'Deactivate User'}
                       >
                         {worker.status === 'deactivated' ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" />
                           </svg>
                         )}
                       </button>
                       <button
                         onClick={() => handleDeleteUser(worker.id)}
-                        className="rounded-lg p-2 text-rose-500 hover:bg-rose-50 transition-all"
+                        className="rounded-xl p-2 text-rose-550 hover:bg-rose-500/15 bg-rose-500/5 border border-rose-500/10 transition-all"
                         title="Delete User"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
