@@ -57,6 +57,10 @@ export const saveUsers = (users) => {
   try {
     fs.writeFileSync(tempPath, JSON.stringify(users, null, 2))
     fs.renameSync(tempPath, usersFilePath)
+    // Run backup immediately in the background so Google Drive stays in sync
+    import('./dbBackup.js')
+      .then(({ backupDbToDrive }) => backupDbToDrive())
+      .catch((err) => console.error('[backup] Post-save users backup failed:', err.message))
   } catch (err) {
     console.error('Error saving users file:', err)
     if (fs.existsSync(tempPath)) {

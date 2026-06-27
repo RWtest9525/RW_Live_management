@@ -26,5 +26,21 @@
     "driveFolderId": "1K9sN5tMOlbBtZMC9MUl8CWXIjoEjlxlq",
     "createdAt": "2026-05-09T19:12:27.901Z",
     "lastPasswordResetAt": "2026-06-01T16:20:11.533Z"
+  },
+  {
+    "id": "user-1782539820656",
+    "name": "demo",
+    "email": "demo@gmail.com",
+    "phone": "+91 5498656566",
+    "passwordHash": "$2b$10$PD7bwz7cfEqgfNVn5AKOfOa0/SEIvuDGWTqifi.nNKuRDm/weKOZa",
+    "role": "user",
+    "accessPlan": "free",
+    "validUntil": null,
+    "status": "pending",
+    "driveFolderId": "1h3uLtXYoEiZbgrwk0p0wdmF4RokF-JyK",
+    "backupFolderId": "19Kqgiukss353eVOKl0BvfTvZ0nlE7w9W",
+    "telegramBotToken": "",
+    "telegramChatId": "",
+    "createdAt": "2026-06-27T05:57:00.656Z"
   }
 ]
