@@ -63,7 +63,7 @@ function PasswordRequestsPage() {
         </Link>
         <div>
           <h2 className={`text-3xl font-black ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Password Reset Requests</h2>
-          <p className={`text-sm font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Approve or reject password change requests</p>
+          <p className={`text-sm font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Approve or reject password change requests</p>
         </div>
       </div>
 

@@ -162,7 +162,7 @@ function PortalLayout() {
   }
 
   return (
-    <div className={`flex min-h-screen transition-colors duration-200 ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`flex min-h-screen transition-colors duration-200 ${theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex ${isSidebarCollapsed ? 'w-20 p-3' : 'w-64 p-5'} border-r flex-col transition-all duration-300 ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'} sticky top-0 h-screen`}>
         <div className="flex-1 overflow-y-auto">
@@ -276,7 +276,7 @@ function PortalLayout() {
       {/* Mobile App View (Bottom Bar & Modern Layout) */}
       <div className="flex-1 flex flex-col min-w-0 h-screen relative">
         {/* Mobile App Header */}
-        <header className={`md:hidden flex items-center justify-between px-4 py-2.5 sticky top-0 z-40 ${theme === 'dark' ? 'bg-slate-950/80' : 'bg-white/80'} backdrop-blur-xl border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+        <header className={`md:hidden flex items-center justify-between px-4 py-2.5 sticky top-0 z-40 ${theme === 'dark' ? 'bg-slate-900/80' : 'bg-white/80'} backdrop-blur-xl border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
           <div className="flex items-center gap-2.5">
             <Logo className="h-8 w-8 flex-shrink-0" />
             <div>
@@ -369,40 +369,54 @@ function PortalLayout() {
         {isMobileMenuOpen && (
           <div className="md:hidden fixed inset-0 z-[60] animate-in fade-in duration-300">
             <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={() => setIsMobileMenuOpen(false)} />
-            <div className={`absolute bottom-0 left-0 right-0 rounded-t-[40px] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom-full duration-500 ${theme === 'dark' ? 'bg-slate-900 border-t border-slate-800' : 'bg-white border-t border-slate-200'}`}>
-              <div className="flex items-center justify-between mb-8">
-                <h3 className={`text-xl font-black uppercase tracking-widest ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Menu</h3>
-                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-full bg-slate-800/50 text-slate-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <div className={`absolute bottom-0 left-0 right-0 rounded-t-[32px] p-6 pb-8 shadow-2xl flex flex-col max-h-[80vh] animate-in slide-in-from-bottom-full duration-400 ${
+              theme === 'dark' ? 'bg-slate-800 border-t border-slate-700 text-white' : 'bg-white border-t border-slate-200 text-slate-900'
+            }`}>
+              {/* Sticky Header with Close Button */}
+              <div className="flex items-center justify-between mb-5 shrink-0">
+                <h3 className="text-base font-black uppercase tracking-wider">Menu Options</h3>
+                <button 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className={`p-2 rounded-full transition-all border ${
+                    theme === 'dark' 
+                      ? 'bg-slate-700 text-white border-slate-600 hover:bg-slate-650' 
+                      : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                  }`}
+                  title="Close Menu"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                {filteredNavItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-4 p-4 rounded-3xl border transition-all ${
-                      theme === 'dark' ? 'bg-slate-800/50 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
-                    }`}
+              {/* Scrollable grid area */}
+              <div className="overflow-y-auto pr-1">
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredNavItems.map((item) => (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${
+                        theme === 'dark' ? 'bg-slate-900/60 border-slate-700 hover:bg-slate-900 text-slate-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <div className="text-blue-500">{item.icon}</div>
+                      <span className="text-xs font-black uppercase tracking-tight">{item.label}</span>
+                    </NavLink>
+                  ))}
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="col-span-2 flex items-center justify-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 font-black uppercase tracking-widest mt-2 hover:bg-rose-500/20 transition-all"
                   >
-                    <div className="text-blue-500">{item.icon}</div>
-                    <span className="text-xs font-black uppercase tracking-tight">{item.label}</span>
-                  </NavLink>
-                ))}
-                
-                <button
-                  onClick={handleLogout}
-                  className={`col-span-2 flex items-center justify-center gap-3 p-5 rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-500 font-black uppercase tracking-widest mt-4`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Logout Session
-                </button>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout Session
+                  </button>
+                </div>
               </div>
             </div>
           </div>

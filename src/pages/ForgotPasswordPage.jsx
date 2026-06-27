@@ -44,7 +44,7 @@ function ForgotPasswordPage() {
           <h2 className={`text-2xl font-black ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
             {step === 3 ? 'Request Sent' : 'Forgot Password?'}
           </h2>
-          <p className={`mt-2 text-sm font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+          <p className={`mt-2 text-sm font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
             {step === 1 && "Enter your Email or Phone"}
             {step === 2 && "Choose your password type"}
             {step === 3 && "Admin will share temporary password"}
@@ -106,7 +106,7 @@ function ForgotPasswordPage() {
         <div className="mt-8 text-center">
           <Link
             to="/login"
-            className={`text-sm font-black uppercase tracking-widest transition-all hover:text-blue-500 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}
+            className={`text-sm font-black uppercase tracking-widest transition-all hover:text-blue-500 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}
           >
             Back to Login
           </Link>
