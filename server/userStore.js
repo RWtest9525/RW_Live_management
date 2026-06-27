@@ -88,9 +88,6 @@ export const createUser = async ({
   backupFolderId = null,
   telegramBotToken = '',
   telegramChatId = '',
-  accountType = 'Personal',
-  purpose = '',
-  socialProfile = '',
 }) => {
   const users = getUsers()
   
@@ -114,9 +111,6 @@ export const createUser = async ({
     telegramBotToken: telegramBotToken || '',
     telegramChatId: telegramChatId || '',
     createdAt: new Date().toISOString(),
-    accountType,
-    purpose,
-    socialProfile,
   }
 
   users.push(newUser)

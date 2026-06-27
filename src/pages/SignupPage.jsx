@@ -69,9 +69,6 @@ function SignupPage() {
     password: '',
     confirmPassword: '',
     acceptedTerms: false,
-    accountType: 'Personal',
-    socialProfile: '',
-    purpose: '',
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -134,14 +131,6 @@ function SignupPage() {
     setError('')
     if (form.password !== form.confirmPassword) {
       setError('Password and confirm password must match.')
-      return
-    }
-    if (!form.socialProfile.trim()) {
-      setError('Please provide your Hugging Face, GitHub or LinkedIn URL.')
-      return
-    }
-    if (!form.purpose.trim()) {
-      setError('Please provide a brief purpose of access.')
       return
     }
     if (!form.acceptedTerms) {
@@ -286,62 +275,6 @@ function SignupPage() {
                   />
                 }
               />
-            </div>
-
-            {/* Verification Fields to Prevent Scammers */}
-            <div className="mt-4 border-t border-white/10 pt-4 space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.18em] text-slate-200">
-                    Account Type
-                  </span>
-                  <span className="group flex items-center rounded-xl border border-slate-600/70 bg-slate-900/90 px-4 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all focus-within:border-amber-300 focus-within:bg-slate-900 focus-within:ring-4 focus-within:ring-amber-300/15">
-                    <span className="mr-3 text-slate-300">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 4h3a3 3 0 006 0h3a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm2.5 7a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm2.45 4a2.5 2.5 0 00-4.9 0h4.9zM12 9a1 1 0 100 2h3a1 1 0 100-2h-3zm-1 4a1 1 0 011-1h3a1 1 0 110 2h-3a1 1 0 01-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                    <select
-                      value={form.accountType}
-                      onChange={(e) => update('accountType', e.target.value)}
-                      className="w-full bg-transparent py-2.5 text-base font-bold text-white outline-none placeholder:font-semibold placeholder:text-slate-500 sm:text-[16px] appearance-none"
-                    >
-                      <option value="Personal" className="bg-slate-950 text-white">Personal / Developer</option>
-                      <option value="Agency" className="bg-slate-950 text-white">Marketing Agency</option>
-                      <option value="Business" className="bg-slate-950 text-white">App Business Owner</option>
-                    </select>
-                  </span>
-                </label>
-
-                <AuthField
-                  label="Hugging Face / GitHub / LinkedIn URL"
-                  icon="globe"
-                  value={form.socialProfile}
-                  onChange={(e) => update('socialProfile', e.target.value)}
-                  placeholder="https://huggingface.co/username"
-                  required
-                />
-              </div>
-
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.18em] text-slate-200">
-                  Purpose of Access
-                </span>
-                <span className="group flex items-start rounded-xl border border-slate-600/70 bg-slate-900/90 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all focus-within:border-amber-300 focus-within:bg-slate-900 focus-within:ring-4 focus-within:ring-amber-300/15">
-                  <span className="mr-3 mt-1.5 text-slate-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                  <textarea
-                    value={form.purpose}
-                    onChange={(e) => update('purpose', e.target.value)}
-                    placeholder="Describe why you want to use the platform. Unverified accounts will be rejected by admin."
-                    className="min-h-[80px] w-full bg-transparent py-1.5 text-base font-bold text-white outline-none placeholder:font-semibold placeholder:text-slate-500 sm:text-[16px] resize-none"
-                    required
-                  />
-                </span>
-              </label>
             </div>
           </div>
 

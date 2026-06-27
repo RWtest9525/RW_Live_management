@@ -7,16 +7,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { name, phone, country, email, password, accountType, purpose, socialProfile } = req.body ?? {}
+    const { name, phone, country, email, password } = req.body ?? {}
     if (!name || !phone || !country || !email || !password) {
       return res.status(400).json({
         error: 'name, phone, country, email and password are required',
-      })
-    }
-
-    if (!accountType || !purpose || !socialProfile) {
-      return res.status(400).json({
-        error: 'Account Type, Social Profile and Access Purpose are required for security verification.',
       })
     }
 
@@ -57,9 +51,6 @@ export default async function handler(req, res) {
       accessPlan: 'free',
       driveFolderId: driveFolderId,
       backupFolderId: backupFolderId,
-      accountType,
-      purpose,
-      socialProfile,
     })
 
     const { passwordHash, ...userWithoutPassword } = newUser

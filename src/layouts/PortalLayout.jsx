@@ -512,38 +512,8 @@ function PendingUserView({ user, handleLogout }) {
           Account Under Review
         </h1>
         <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-300 max-w-md mx-auto">
-          Hello <span className="text-white font-bold">{user.name}</span>, your registration is pending manual verification by our administrators. This prevents spam accounts and protects our platform's automated features.
+          Hello <span className="text-white font-bold">{user.name}</span> (<span className="text-slate-400">{user.email}</span>), your registration is pending manual verification by our administrators. This prevents spam accounts and protects our platform's automated features.
         </p>
-
-        <div className="mt-8 text-left rounded-2xl bg-black/45 p-6 border border-white/5 shadow-inner space-y-4">
-          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 border-b border-white/5 pb-2">Submitted Details</h3>
-          <div className="grid gap-4 sm:grid-cols-2 text-sm">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email ID</p>
-              <p className="font-bold text-slate-200">{user.email}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Account Type</p>
-              <p className="font-bold text-slate-200">{user.accountType || 'Personal'}</p>
-            </div>
-            <div className="sm:col-span-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Social Profile (HF/GitHub/LinkedIn)</p>
-              <p className="font-bold text-blue-400 break-all mt-0.5">
-                {user.socialProfile ? (
-                  <a href={user.socialProfile} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                    {user.socialProfile}
-                  </a>
-                ) : '-'}
-              </p>
-            </div>
-            <div className="sm:col-span-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Purpose of Access</p>
-              <p className="mt-1 p-3 rounded-lg bg-white/[0.03] text-slate-300 font-medium italic border border-white/5 text-xs whitespace-pre-wrap">
-                {user.purpose || 'No purpose description provided.'}
-              </p>
-            </div>
-          </div>
-        </div>
 
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 pt-6">
           <p className="text-xs font-bold text-slate-400 text-center sm:text-left">

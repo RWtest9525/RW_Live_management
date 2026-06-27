@@ -21,9 +21,6 @@ export default async function handler(req, res) {
         validUntil: user.validUntil ?? null,
         driveFolderId: user.driveFolderId ?? null,
         status: user.status ?? 'pending',
-        accountType: user.accountType ?? 'Personal',
-        purpose: user.purpose ?? '',
-        socialProfile: user.socialProfile ?? '',
       },
       subscription: getSubscriptionSummary(user),
     })

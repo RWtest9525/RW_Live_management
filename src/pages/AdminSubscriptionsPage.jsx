@@ -295,35 +295,6 @@ function AdminSubscriptionsPage() {
                       </span>
                     </div>
 
-                    <div className="mt-4 rounded-xl bg-black/35 p-4 border border-white/5 space-y-3.5 text-sm font-semibold">
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs ${mutedText} font-black uppercase tracking-widest`}>Account Type</span>
-                        <span className={`rounded-md bg-violet-500/10 px-2 py-0.5 text-xs font-black uppercase text-violet-400 border border-violet-500/15`}>
-                          {user.accountType || 'Personal'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className={`block text-xs ${mutedText} font-black uppercase tracking-widest mb-1`}>Social Profile URL</span>
-                        {user.socialProfile ? (
-                          <a
-                            href={user.socialProfile}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-bold text-blue-400 hover:underline break-all"
-                          >
-                            {user.socialProfile}
-                          </a>
-                        ) : (
-                          <span className="text-xs italic text-slate-500">No profile provided</span>
-                        )}
-                      </div>
-                      <div>
-                        <span className={`block text-xs ${mutedText} font-black uppercase tracking-widest mb-1`}>Purpose of Access</span>
-                        <p className="rounded-lg bg-white/[0.02] p-2.5 text-xs font-medium text-slate-300 italic border border-white/5 whitespace-pre-wrap">
-                          {user.purpose || 'No description provided.'}
-                        </p>
-                      </div>
-                    </div>
 
                     <div className="mt-5 flex gap-3">
                       <button
@@ -451,12 +422,6 @@ function AdminSubscriptionsPage() {
                       </span>
                     </div>
 
-                    <div className="mt-4 rounded-xl bg-black/20 p-3.5 border border-white/5 space-y-2 text-xs font-semibold">
-                      <p className="text-slate-400">Account Type: <span className="text-slate-200 font-bold">{user.accountType || 'Personal'}</span></p>
-                      {user.socialProfile ? (
-                        <p className="text-slate-400 truncate">Profile: <span className="text-slate-200 font-bold">{user.socialProfile}</span></p>
-                      ) : null}
-                    </div>
 
                     <div className="mt-5 flex gap-3">
                       <button
