@@ -13,7 +13,7 @@ function AdminMaintenancePage() {
   const [messageInput, setMessageInput] = useState(
     'We are improving your experience. Please wait until the maintenance window is complete.'
   )
-  const [showConfig, setShowConfig] = useState(true)
+  const [showConfig, setShowConfig] = useState(false)
   const [timeLeft, setTimeLeft] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
 
@@ -83,6 +83,7 @@ function AdminMaintenancePage() {
     const res = await updateMaintenanceSettings(payload)
     if (res.ok) {
       setStatusMessage(`Maintenance successfully turned ${activate ? 'ON' : 'OFF'}.`)
+      setShowConfig(false)
     } else {
       setStatusMessage(`Error: ${res.error}`)
     }
