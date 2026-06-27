@@ -106,13 +106,13 @@ function WorkerPanelPage() {
     }
   }
 
-  const toggleBanUser = async (user) => {
+  const toggleDeactivateUser = async (user) => {
     if (user.id === currentUser?.id) {
-      setMessage("You cannot ban yourself.")
+      setMessage("You cannot deactivate yourself.")
       return
     }
-    const newStatus = user.status === 'BANNED' ? 'ACTIVE' : 'BANNED'
-    if (!window.confirm(`Are you sure you want to ${newStatus === 'BANNED' ? 'BAN' : 'UNBAN'} this user?`)) return
+    const newStatus = user.status === 'deactivated' ? 'active' : 'deactivated'
+    if (!window.confirm(`Are you sure you want to ${newStatus === 'deactivated' ? 'DEACTIVATE' : 'ACTIVATE'} this user?`)) return
     try {
       await fetch('/api/data', {
         method: 'PUT',
@@ -122,7 +122,7 @@ function WorkerPanelPage() {
         },
         body: JSON.stringify({ type: 'user', id: user.id, status: newStatus })
       })
-      setMessage(`User ${newStatus === 'BANNED' ? 'banned' : 'unbanned'} successfully.`)
+      setMessage(`User ${newStatus === 'deactivated' ? 'deactivated' : 'activated'} successfully.`)
       loadInitialData()
     } catch (error) {
       setMessage(error.message)
@@ -176,6 +176,77 @@ function WorkerPanelPage() {
           </button>
         )}
       </div>
+
+      {/* Pending User Approval Section */}
+      {users.some(u => u.status === 'pending') && (
+        <div className={`rounded-2xl border p-6 shadow-xl transition-all duration-300 animate-in fade-in zoom-in-95 ${
+          theme === 'dark' ? 'border-amber-500/20 bg-amber-500/[0.02]' : 'border-amber-200 bg-amber-50/50'
+        }`}>
+          <div className="flex items-center gap-3 border-b pb-4 border-slate-200/20 mb-4">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-ping" />
+            <h3 className={`text-lg font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Pending User Registrations</h3>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {users.filter(u => u.status === 'pending').map((pUser) => (
+              <div key={pUser.id} className={`rounded-xl border p-5 flex flex-col justify-between gap-4 transition-all duration-300 ${
+                theme === 'dark' ? 'border-slate-800 bg-slate-950 hover:border-slate-700' : 'border-slate-200 bg-white hover:border-slate-300'
+              }`}>
+                <div>
+                  <h4 className={`text-sm font-black ${theme === 'dark' ? 'text-slate-200' : 'text-slate-900'}`}>{pUser.name}</h4>
+                  <p className="text-xs font-semibold text-slate-500">{pUser.email}</p>
+                  {pUser.phone && <p className="text-xs font-semibold text-slate-500">{pUser.phone}</p>}
+                </div>
+                <div className="flex gap-2.5">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/data', {
+                          method: 'PUT',
+                          headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                          },
+                          body: JSON.stringify({ type: 'user', id: pUser.id, status: 'active' })
+                        })
+                        if (!res.ok) throw new Error('Failed to approve user')
+                        setMessage('Account approved successfully.')
+                        loadInitialData()
+                      } catch (err) {
+                        setMessage(err.message)
+                      }
+                    }}
+                    className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow shadow-emerald-950 transition"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/data', {
+                          method: 'PUT',
+                          headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                          },
+                          body: JSON.stringify({ type: 'user', id: pUser.id, status: 'rejected' })
+                        })
+                        if (!res.ok) throw new Error('Failed to reject user')
+                        setMessage('Account rejected successfully.')
+                        loadInitialData()
+                      } catch (err) {
+                        setMessage(err.message)
+                      }
+                    }}
+                    className="flex-1 rounded-xl bg-rose-600/10 hover:bg-rose-600/20 py-2.5 text-xs font-black uppercase tracking-widest text-rose-400 border border-rose-500/20 transition"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {(showAddForm || editingUserId) && currentUser?.role === 'admin' && (
         <div className={`rounded-2xl border p-6 shadow-xl transition-all duration-300 animate-in fade-in zoom-in-95 ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'}`}>
@@ -331,11 +402,17 @@ function WorkerPanelPage() {
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest w-fit ${theme === 'dark' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
                         {worker.accessPlan ?? worker.role ?? 'User'}
                       </span>
-                      {worker.status === 'BANNED' && (
-                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest w-fit bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                          BANNED
-                        </span>
-                      )}
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest w-fit ${
+                        worker.status === 'pending'
+                          ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                          : worker.status === 'rejected'
+                          ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                          : worker.status === 'deactivated' || worker.status === 'BANNED'
+                          ? 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                          : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                      }`}>
+                        {worker.status || 'active'}
+                      </span>
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest w-fit ${
                         worker.hasTelegramBotToken && worker.hasTelegramChatId
                           ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
@@ -370,11 +447,11 @@ function WorkerPanelPage() {
                         </svg>
                       </button>
                       <button
-                        onClick={() => toggleBanUser(worker)}
-                        className={`rounded-lg p-2 transition-all ${worker.status === 'BANNED' ? 'text-emerald-500 hover:bg-emerald-50' : 'text-amber-500 hover:bg-amber-50'}`}
-                        title={worker.status === 'BANNED' ? 'Unban User' : 'Ban User'}
+                        onClick={() => toggleDeactivateUser(worker)}
+                        className={`rounded-lg p-2 transition-all ${worker.status === 'deactivated' ? 'text-emerald-500 hover:bg-emerald-50' : 'text-amber-500 hover:bg-amber-50'}`}
+                        title={worker.status === 'deactivated' ? 'Activate User' : 'Deactivate User'}
                       >
-                        {worker.status === 'BANNED' ? (
+                        {worker.status === 'deactivated' ? (
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
