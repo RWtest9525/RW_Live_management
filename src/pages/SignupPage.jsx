@@ -61,6 +61,7 @@ const getCountryFlag = (country) => {
 function SignupPage() {
   const isAuthenticated = usePortalStore((state) => state.isAuthenticated)
   const navigate = useNavigate()
+  const login = usePortalStore((state) => state.login)
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -141,7 +142,12 @@ function SignupPage() {
     setLoading(true)
     try {
       await signupRequest(form)
-      navigate('/login')
+      const loginResult = await login({ email: form.email, password: form.password })
+      if (loginResult.ok) {
+        navigate('/dashboard', { replace: true })
+      } else {
+        navigate('/login')
+      }
     } catch (signupError) {
       setError(signupError.message)
     } finally {
