@@ -12,7 +12,7 @@ import {
   getPasswordRequestsLocal,
   updatePasswordRequestStatusLocal
 } from '../server/dataService.js'
-import { readAuthUserFromRequest } from '../server/auth.js'
+import { readActiveUserFromRequest } from '../server/auth.js'
 import { createProofVideoToken } from '../server/auth.js'
 import { getUsers, updateUserById, saveUsers } from '../server/userStore.js'
 import localDb from '../server/localDb.js'
@@ -45,7 +45,7 @@ const withPlayableProofUrls = (proofs) =>
 
 export default async function handler(req, res) {
   try {
-    const authUser = await readAuthUserFromRequest(req)
+    const authUser = await readActiveUserFromRequest(req)
     if (!authUser) {
       return res.status(401).json({ error: 'Authentication required' })
     }

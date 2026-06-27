@@ -14,8 +14,12 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid credentials' })
     }
 
-    if (user.status !== 'active') {
-      return res.status(403).json({ error: 'Account is deactivated' })
+    if (user.status === 'rejected') {
+      return res.status(403).json({ error: 'Your account registration request has been rejected by the admin.' })
+    }
+
+    if (user.status === 'deactivated') {
+      return res.status(403).json({ error: 'Your account has been deactivated. Please contact support.' })
     }
 
     const token = createSessionToken(user)

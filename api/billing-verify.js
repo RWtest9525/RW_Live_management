@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { readAuthUserFromRequest } from '../server/auth.js'
+import { readActiveUserFromRequest } from '../server/auth.js'
 import localDb from '../server/localDb.js'
 import { getSubscriptionPlan } from '../shared/subscriptionPlans.js'
 import { getNextValidUntil, getSubscriptionSummary } from '../server/subscription.js'
@@ -23,8 +23,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const authUser = await readAuthUserFromRequest(req)
-    if (!authUser) return res.status(401).json({ error: 'Unauthorized' })
+    const authUser = readActiveUserFromRequest(req)
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized or account is not active' })
 
     const { razorpay_order_id: orderId, razorpay_payment_id: paymentId, razorpay_signature: signature } =
       req.body ?? {}

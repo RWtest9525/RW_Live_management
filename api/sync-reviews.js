@@ -1,5 +1,5 @@
 import { syncAppReviews } from '../server/syncEngine.js'
-import { readAuthUserFromRequest } from '../server/auth.js'
+import { readActiveUserFromRequest } from '../server/auth.js'
 import { getAppLocal } from '../server/dataService.js'
 
 export default async function handler(req, res) {
@@ -8,9 +8,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const user = await readAuthUserFromRequest(req)
+    const user = readActiveUserFromRequest(req)
     if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' })
+      return res.status(401).json({ error: 'Unauthorized or account is not active' })
     }
 
     const {

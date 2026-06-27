@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { readAuthUserFromRequest } from '../server/auth.js'
+import { readActiveUserFromRequest } from '../server/auth.js'
 import localDb from '../server/localDb.js'
 import { getSubscriptionPlan } from '../shared/subscriptionPlans.js'
 
@@ -39,8 +39,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const user = await readAuthUserFromRequest(req)
-    if (!user) return res.status(401).json({ error: 'Unauthorized' })
+    const user = readActiveUserFromRequest(req)
+    if (!user) return res.status(401).json({ error: 'Unauthorized or account is not active' })
 
     const { planId } = req.body ?? {}
     const plan = getSubscriptionPlan(planId)

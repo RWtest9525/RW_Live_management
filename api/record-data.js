@@ -1,5 +1,5 @@
 import localDb from '../server/localDb.js'
-import { readAuthUserFromRequest } from '../server/auth.js'
+import { readActiveUserFromRequest } from '../server/auth.js'
 
 const IST_OFFSET_MINUTES = 330
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -25,9 +25,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const user = await readAuthUserFromRequest(req)
+    const user = readActiveUserFromRequest(req)
     if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' })
+      return res.status(401).json({ error: 'Unauthorized or account is not active' })
     }
 
     const app = localDb.prepare('SELECT * FROM apps WHERE id = ?').get(appId)

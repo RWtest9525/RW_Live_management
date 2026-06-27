@@ -1,4 +1,4 @@
-import { readAuthUserFromRequest } from '../server/auth.js'
+import { readActiveUserFromRequest } from '../server/auth.js'
 import { SUBSCRIPTION_PLANS } from '../shared/subscriptionPlans.js'
 import { getSubscriptionSummary } from '../server/subscription.js'
 
@@ -7,8 +7,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const user = await readAuthUserFromRequest(req)
-  if (!user) return res.status(401).json({ error: 'Unauthorized' })
+  const user = readActiveUserFromRequest(req)
+  if (!user) return res.status(401).json({ error: 'Unauthorized or account is not active' })
 
   return res.status(200).json({
     plans: Object.values(SUBSCRIPTION_PLANS),

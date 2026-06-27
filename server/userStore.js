@@ -88,6 +88,9 @@ export const createUser = async ({
   backupFolderId = null,
   telegramBotToken = '',
   telegramChatId = '',
+  accountType = 'Personal',
+  purpose = '',
+  socialProfile = '',
 }) => {
   const users = getUsers()
   
@@ -105,12 +108,15 @@ export const createUser = async ({
     role,
     accessPlan,
     validUntil,
-    status: 'active',
+    status: 'pending',
     driveFolderId: driveFolderId,
     backupFolderId: backupFolderId,
     telegramBotToken: telegramBotToken || '',
     telegramChatId: telegramChatId || '',
     createdAt: new Date().toISOString(),
+    accountType,
+    purpose,
+    socialProfile,
   }
 
   users.push(newUser)
@@ -121,8 +127,6 @@ export const createUser = async ({
 export const authenticateUser = async ({ email, password }) => {
   const user = findUserByEmail(email)
   if (!user) return null
-  
-  if (user.status !== 'active') return null
   
   const ok = await bcrypt.compare(password, user.passwordHash)
   if (!ok) return null

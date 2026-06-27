@@ -4,7 +4,7 @@ import localDb from '../server/localDb.js'
 import { getDriveFileMediaMetadata, streamDriveFile } from '../server/driveStorage.js'
 import {
   createProofVideoToken,
-  readAuthUserFromRequest,
+  readActiveUserFromRequest,
   verifySignedToken,
 } from '../server/auth.js'
 
@@ -60,8 +60,8 @@ export default async function handler(req, res) {
     const signedOk = signed?.typ === 'proof-video' && signed.proofId === proofId
 
     if (!signedOk) {
-      const user = await readAuthUserFromRequest(req)
-      if (!user) return res.status(401).json({ error: 'Unauthorized' })
+      const user = readActiveUserFromRequest(req)
+      if (!user) return res.status(401).json({ error: 'Unauthorized or account is not active' })
       if (user.role !== 'admin' && proof.ownerUserId !== user.id) {
         return res.status(403).json({ error: 'Forbidden' })
       }

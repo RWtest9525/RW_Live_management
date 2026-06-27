@@ -143,6 +143,21 @@ function PortalLayout() {
     return <MaintenanceUserView endTime={maintenanceEndTime} message={maintenanceMessage} />
   }
 
+  // Intercept if account status is pending
+  if (currentUser?.status === 'pending' && currentUser?.role !== 'admin') {
+    return <PendingUserView user={currentUser} handleLogout={() => { logout(); navigate('/login'); }} />
+  }
+
+  // Intercept if account status is rejected
+  if (currentUser?.status === 'rejected' && currentUser?.role !== 'admin') {
+    return <RejectedUserView user={currentUser} handleLogout={() => { logout(); navigate('/login'); }} />
+  }
+
+  // Intercept if account is deactivated or not active
+  if (currentUser?.status !== 'active' && currentUser?.role !== 'admin') {
+    return <DeactivatedUserView user={currentUser} handleLogout={() => { logout(); navigate('/login'); }} />
+  }
+
   return (
     <div className={`flex min-h-screen transition-colors duration-200 ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
       {/* Desktop Sidebar */}
@@ -471,6 +486,153 @@ function MaintenanceUserView({ endTime, message }) {
             Expected opening: <span className="text-white">{formatExpectedOpening(endTime)}</span>
           </div>
         )}
+      </div>
+    </main>
+  )
+}
+
+function PendingUserView({ user, handleLogout }) {
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08040d] px-4 py-8 text-white w-full">
+      <div className="absolute -left-20 bottom-0 h-[420px] w-[420px] rounded-full bg-violet-600/25 blur-3xl" />
+      <div className="absolute -right-24 top-0 h-[430px] w-[430px] rounded-full bg-amber-400/20 blur-3xl" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08),transparent_24%)]" />
+
+      <div className="relative z-10 w-full max-w-2xl rounded-[2.5rem] border border-white/12 bg-white/[0.04] p-8 sm:p-10 text-center shadow-2xl shadow-black/80 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-500">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-300 shadow-xl shadow-amber-950/50">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-slate-950" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+        </div>
+
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-400">
+          Verification Pending
+        </p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
+          Account Under Review
+        </h1>
+        <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-300 max-w-md mx-auto">
+          Hello <span className="text-white font-bold">{user.name}</span>, your registration is pending manual verification by our administrators. This prevents spam accounts and protects our platform's automated features.
+        </p>
+
+        <div className="mt-8 text-left rounded-2xl bg-black/45 p-6 border border-white/5 shadow-inner space-y-4">
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 border-b border-white/5 pb-2">Submitted Details</h3>
+          <div className="grid gap-4 sm:grid-cols-2 text-sm">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email ID</p>
+              <p className="font-bold text-slate-200">{user.email}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Account Type</p>
+              <p className="font-bold text-slate-200">{user.accountType || 'Personal'}</p>
+            </div>
+            <div className="sm:col-span-2">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Social Profile (HF/GitHub/LinkedIn)</p>
+              <p className="font-bold text-blue-400 break-all mt-0.5">
+                {user.socialProfile ? (
+                  <a href={user.socialProfile} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    {user.socialProfile}
+                  </a>
+                ) : '-'}
+              </p>
+            </div>
+            <div className="sm:col-span-2">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Purpose of Access</p>
+              <p className="mt-1 p-3 rounded-lg bg-white/[0.03] text-slate-300 font-medium italic border border-white/5 text-xs whitespace-pre-wrap">
+                {user.purpose || 'No purpose description provided.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 pt-6">
+          <p className="text-xs font-bold text-slate-400 text-center sm:text-left">
+            Approved accounts get instant control desk access. Please check back later.
+          </p>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full sm:w-auto rounded-xl bg-white/10 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-rose-300 border border-rose-500/20 hover:bg-rose-500/10 transition"
+          >
+            Logout Session
+          </button>
+        </div>
+      </div>
+    </main>
+  )
+}
+
+function RejectedUserView({ user, handleLogout }) {
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08040d] px-4 py-8 text-white w-full">
+      <div className="absolute -left-20 bottom-0 h-[420px] w-[420px] rounded-full bg-rose-950/20 blur-3xl" />
+      <div className="absolute -right-24 top-0 h-[430px] w-[430px] rounded-full bg-violet-600/15 blur-3xl" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.06),transparent_24%)]" />
+
+      <div className="relative z-10 w-full max-w-lg rounded-[2.5rem] border border-white/12 bg-white/[0.04] p-8 text-center shadow-2xl shadow-black/80 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-500">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-tr from-rose-600 to-rose-400 shadow-xl shadow-rose-950/50">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-rose-400">
+          Access Rejected
+        </p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
+          Request Declined
+        </h1>
+        <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-300">
+          Hello <span className="text-white font-bold">{user.name}</span>, unfortunately, your request for an account on Reviews World has been declined by the system administrators. If you believe this is a mistake, please contact support to appeal the decision.
+        </p>
+
+        <div className="mt-8 flex flex-col gap-4 border-t border-white/5 pt-6">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full rounded-xl bg-rose-500/10 border border-rose-500/25 py-3 text-sm font-black uppercase tracking-widest text-rose-300 hover:bg-rose-500/20 transition"
+          >
+            Logout Session
+          </button>
+        </div>
+      </div>
+    </main>
+  )
+}
+
+function DeactivatedUserView({ user, handleLogout }) {
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08040d] px-4 py-8 text-white w-full">
+      <div className="absolute -left-20 bottom-0 h-[420px] w-[420px] rounded-full bg-slate-900/40 blur-3xl" />
+      <div className="absolute -right-24 top-0 h-[430px] w-[430px] rounded-full bg-violet-600/15 blur-3xl" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.06),transparent_24%)]" />
+
+      <div className="relative z-10 w-full max-w-lg rounded-[2.5rem] border border-white/12 bg-white/[0.04] p-8 text-center shadow-2xl shadow-black/80 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-500">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-800 shadow-xl border border-white/10">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+          Account Suspended
+        </p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
+          Account Deactivated
+        </h1>
+        <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-300">
+          Hello <span className="text-white font-bold">{user.name}</span>, your control desk account is currently deactivated. Please get in touch with the administration team to reactivate your access.
+        </p>
+
+        <div className="mt-8 flex flex-col gap-4 border-t border-white/5 pt-6">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full rounded-xl bg-white/5 border border-white/10 py-3 text-sm font-black uppercase tracking-widest text-slate-300 hover:bg-white/10 transition"
+          >
+            Logout Session
+          </button>
+        </div>
       </div>
     </main>
   )

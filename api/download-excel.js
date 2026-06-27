@@ -1,5 +1,5 @@
 import localDb from '../server/localDb.js';
-import { readAuthUserFromRequest, verifySignedToken } from '../server/auth.js';
+import { readActiveUserFromRequest, verifySignedToken } from '../server/auth.js';
 import {
   buildReviewExcelBuffer,
   getDroppedReviewsForAppDate,
@@ -9,7 +9,7 @@ import {
 export default async function handler(req, res) {
   try {
     const { proofId, type, appId, date, token } = req.query;
-    const user = await readAuthUserFromRequest(req);
+    const user = await readActiveUserFromRequest(req);
     const signedAccess = verifySignedToken(token);
     const hasValidExcelToken =
       signedAccess?.typ === 'excel-download' &&

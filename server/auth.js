@@ -81,6 +81,13 @@ export const readAuthUserFromRequest = (req) => {
   return findUserById(session.uid)
 }
 
+export const readActiveUserFromRequest = (req) => {
+  const user = readAuthUserFromRequest(req)
+  if (!user) return null
+  if (user.status !== 'active' && user.role !== 'admin') return null
+  return user
+}
+
 export const authenticateUser = async ({ email, password }) => {
   return await authFromStore({ email, password })
 }
