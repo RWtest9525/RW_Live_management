@@ -1,8 +1,7 @@
 function Logo({ className = "h-10 w-10" }) {
   return (
     <div className={`relative inline-flex shrink-0 items-center justify-center ${className}`}>
-      <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_140deg,#7c3aed,#f59e0b,#fef3c7,#7c3aed)] opacity-90 blur-[1px]" />
-      <div className="relative h-full aspect-square overflow-hidden rounded-full border border-amber-300/70 bg-black p-[7%] shadow-xl shadow-amber-950/30 ring-2 ring-white/10">
+      <div className="relative h-full aspect-square overflow-hidden rounded-full border border-slate-700 bg-black p-[5%] shadow-md">
         <img 
           src="/logo.png" 
           alt="Reviews World" 
