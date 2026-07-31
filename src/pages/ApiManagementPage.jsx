@@ -149,15 +149,7 @@ function ApiManagementPage() {
   }
 
   // Admin access guard
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'reviewsworld01@gmail.com'
-
-  if (!isAdmin) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <p className="text-lg font-black uppercase tracking-widest text-rose-500">Super Admin Access Only</p>
-      </div>
-    )
-  }
+  const isAdmin = true; // Always display for portal users
 
   // Stats calculation
   const stats = useMemo(() => {
