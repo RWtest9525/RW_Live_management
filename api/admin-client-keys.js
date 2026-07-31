@@ -13,21 +13,7 @@ const ensureFileExists = () => {
     fs.mkdirSync(dir, { recursive: true })
   }
   if (!fs.existsSync(keysFilePath)) {
-    // Initial sample seed data for Super Admin
-    const seedData = [
-      {
-        id: 1,
-        client_name: "Demo Client Corp",
-        api_key: `sk_live_${crypto.randomBytes(16).toString('hex')}`,
-        subscription_plan: "Monthly",
-        start_date: new Date().toISOString(),
-        expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        request_limit: 5000,
-        requests_used: 1420,
-        is_active: true
-      }
-    ]
-    fs.writeFileSync(keysFilePath, JSON.stringify(seedData, null, 2))
+    fs.writeFileSync(keysFilePath, JSON.stringify([], null, 2))
   }
 }
 

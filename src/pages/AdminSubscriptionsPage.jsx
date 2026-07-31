@@ -110,7 +110,7 @@ function AdminSubscriptionsPage() {
         setLimitInput(5000)
         setExpiryInput(defaultExpiry)
         fetchApiKeys()
-        alert(`API Key generated for ${clientNameInput}!`)
+        alert(`API Key generated for "${clientNameInput}"!`)
       } else {
         alert(data.error || 'Failed to generate API key')
       }
@@ -122,7 +122,7 @@ function AdminSubscriptionsPage() {
   }
 
   const handleRenewKey = async (id, clientName) => {
-    if (!window.confirm(`Renew subscription for ${clientName} (+30 Days & reset limit)?`)) return
+    if (!window.confirm(`Renew subscription for "${clientName}" (+30 Days & reset limit)?`)) return
     try {
       const res = await fetch('/api/admin-client-keys', {
         method: 'POST',
@@ -132,7 +132,7 @@ function AdminSubscriptionsPage() {
       const data = await res.json()
       if (data.success) {
         fetchApiKeys()
-        alert(`Subscription renewed for ${clientName}!`)
+        alert(`Subscription renewed for "${clientName}"!`)
       }
     } catch (err) {
       alert('Error renewing subscription')
@@ -156,7 +156,7 @@ function AdminSubscriptionsPage() {
   }
 
   const handleDeleteApiKey = async (id, clientName) => {
-    if (!window.confirm(`Delete API Key for ${clientName}?`)) return
+    if (!window.confirm(`Delete API Key for "${clientName}"?`)) return
     try {
       const res = await fetch('/api/admin-client-keys', {
         method: 'POST',
@@ -187,53 +187,53 @@ function AdminSubscriptionsPage() {
     )
   }
 
-  const cardClass = `rounded-3xl border p-6 shadow-xl ${isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`
-  const inputClass = `w-full rounded-xl border px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-    isDark ? 'border-slate-700 bg-slate-800 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'
+  const cardClass = `rounded-3xl border transition-all duration-300 p-6 shadow-md ${
+    isDark ? 'border-slate-800 bg-slate-900/90 text-white' : 'border-slate-200 bg-white text-slate-900'
   }`
+
+  const inputClass = `w-full rounded-xl border px-4 py-2.5 text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+    isDark ? 'border-slate-700 bg-slate-950 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'
+  }`
+
   const mutedText = isDark ? 'text-slate-400' : 'text-slate-500'
 
   return (
-    <section className="space-y-6 pb-16">
+    <section className="space-y-6 pb-16 animate-in fade-in duration-300">
       
       {/* Page Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.25em] text-blue-500">Admin Control Center</p>
-          <h1 className={`mt-2 text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-950'}`}>
+          <h1 className={`mt-1.5 text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-950'}`}>
             Manage Subscriptions & Scraper API Keys
           </h1>
-          <p className={`mt-2 text-sm font-semibold ${mutedText}`}>
+          <p className={`mt-1 text-sm font-semibold ${mutedText}`}>
             Generate client API keys, set request limits, renew subscriptions, and track user billing.
           </p>
         </div>
         <button
           type="button"
           onClick={() => { void loadBillingData(); void fetchApiKeys(); }}
-          className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition"
+          className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition"
         >
-          Refresh Data
+          🔄 Refresh
         </button>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex space-x-3 border-b border-slate-800 pb-3">
+      <div className="flex space-x-3 border-b border-slate-700/40 pb-2">
         <button
           onClick={() => setActiveTab('api-keys')}
-          className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition ${
-            activeTab === 'api-keys'
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
-              : isDark ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          className={`pb-2.5 text-xs font-black uppercase tracking-wider transition border-b-2 ${
+            activeTab === 'api-keys' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
           🔑 Play Store Scraper API Keys & Client Subscriptions
         </button>
         <button
           onClick={() => setActiveTab('billing')}
-          className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition ${
-            activeTab === 'billing'
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
-              : isDark ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          className={`pb-2.5 text-xs font-black uppercase tracking-wider transition border-b-2 ${
+            activeTab === 'billing' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
           💳 User Payment Activity & Razorpay Billing
@@ -242,12 +242,12 @@ function AdminSubscriptionsPage() {
 
       {/* TAB 1: SCRAPER API KEYS & SUBSCRIPTIONS */}
       {activeTab === 'api-keys' && (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Form to Generate API Key */}
-            <div className={cardClass}>
-              <h2 className={`text-lg font-black tracking-tight mb-4 pb-3 border-b border-slate-800 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <div className={`lg:col-span-4 ${cardClass} h-fit`}>
+              <h2 className={`text-base font-black uppercase tracking-wider mb-4 pb-3 border-b ${isDark ? 'border-slate-800 text-white' : 'border-slate-100 text-slate-900'}`}>
                 Generate New API Key
               </h2>
 
@@ -303,7 +303,7 @@ function AdminSubscriptionsPage() {
                 <button
                   type="submit"
                   disabled={submittingKey}
-                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-3 font-black text-white shadow-lg transition text-xs uppercase tracking-wider"
+                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-3 font-black text-xs text-white uppercase tracking-widest shadow-lg transition"
                 >
                   {submittingKey ? 'Generating...' : '⚡ Generate API Key'}
                 </button>
@@ -311,98 +311,100 @@ function AdminSubscriptionsPage() {
             </div>
 
             {/* API Keys List Table */}
-            <div className={`lg:col-span-2 ${cardClass}`}>
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-                <h2 className={`text-lg font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <div className={`lg:col-span-8 ${cardClass}`}>
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800/40">
+                <h2 className={`text-base font-black uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   Client API Keys & Usage Limits
                 </h2>
                 <span className="text-xs font-bold text-slate-400">{apiKeys.length} Keys Total</span>
               </div>
 
               {apiKeyLoading ? (
-                <div className="py-12 text-center text-slate-400">Loading API keys...</div>
+                <div className="py-12 text-center text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading API keys...</div>
               ) : apiKeys.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 font-bold uppercase tracking-wider text-xs">
-                  No API Keys generated yet. Use the form on the left.
+                <div className="py-16 text-center text-slate-400">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center mb-3">🔑</div>
+                  <p className="text-xs font-black uppercase tracking-widest">No API Keys Generated Yet</p>
+                  <p className="text-xs mt-1 text-slate-500">Fill the form on the left to create your first client API key.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="text-[10px] font-black uppercase text-slate-400 border-b border-slate-800">
+                  <table className="w-full text-left text-xs">
+                    <thead className="text-[10px] font-black uppercase text-slate-400 border-b border-slate-800/40">
                       <tr>
-                        <th className="pb-3 px-3">Client</th>
-                        <th className="pb-3 px-3">API Key</th>
-                        <th className="pb-3 px-3">Usage</th>
-                        <th className="pb-3 px-3">Expiry Date</th>
-                        <th className="pb-3 px-3 text-center">Status</th>
-                        <th className="pb-3 px-3 text-right">Actions</th>
+                        <th className="pb-3 px-2">Client</th>
+                        <th className="pb-3 px-2">API Key</th>
+                        <th className="pb-3 px-2">Usage Limit</th>
+                        <th className="pb-3 px-2">Expiry</th>
+                        <th className="pb-3 px-2 text-center">Status</th>
+                        <th className="pb-3 px-2 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 font-medium">
+                    <tbody className="divide-y divide-slate-800/40 font-semibold">
                       {apiKeys.map((k) => {
                         const pct = Math.round((k.requests_used / k.request_limit) * 100)
                         const isExpired = new Date(k.expiry_date) < new Date()
 
                         return (
                           <tr key={k.id} className="hover:bg-slate-800/20 transition">
-                            <td className="py-3.5 px-3">
-                              <div className="font-bold text-white">{k.client_name}</div>
-                              <span className="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded">{k.subscription_plan}</span>
+                            <td className="py-3 px-2">
+                              <div className="font-bold text-slate-100">{k.client_name}</div>
+                              <span className="text-[9px] font-bold text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded">{k.subscription_plan}</span>
                             </td>
 
-                            <td className="py-3.5 px-3 font-mono text-xs">
-                              <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg w-fit">
+                            <td className="py-3 px-2 font-mono text-[11px]">
+                              <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg w-fit">
                                 <span className="text-indigo-300">{k.api_key.slice(0, 10)}...{k.api_key.slice(-4)}</span>
                                 <button onClick={() => copyToClipboard(k.api_key)} className="text-slate-400 hover:text-white ml-1">📋</button>
                               </div>
                             </td>
 
-                            <td className="py-3.5 px-3 min-w-[130px]">
-                              <div className="flex justify-between text-xs font-bold mb-1">
-                                <span>{k.requests_used} / {k.request_limit}</span>
+                            <td className="py-3 px-2 min-w-[120px]">
+                              <div className="flex justify-between text-[11px] font-bold mb-1">
+                                <span>{k.requests_used}/{k.request_limit}</span>
                                 <span className={pct >= 100 ? 'text-rose-400' : pct >= 80 ? 'text-amber-400' : 'text-emerald-400'}>{pct}%</span>
                               </div>
-                              <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                              <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
                                 <div
-                                  className={`h-2 transition-all ${pct >= 100 ? 'bg-rose-500' : pct >= 80 ? 'bg-amber-500' : 'bg-gradient-to-r from-blue-500 to-emerald-400'}`}
+                                  className={`h-1.5 transition-all ${pct >= 100 ? 'bg-rose-500' : pct >= 80 ? 'bg-amber-500' : 'bg-blue-500'}`}
                                   style={{ width: `${Math.min(pct, 100)}%` }}
                                 />
                               </div>
                             </td>
 
-                            <td className="py-3.5 px-3 text-xs">
-                              <div className="font-bold text-slate-200">{new Date(k.expiry_date).toLocaleDateString()}</div>
+                            <td className="py-3 px-2 text-[11px]">
+                              <div className="font-bold text-slate-300">{new Date(k.expiry_date).toLocaleDateString()}</div>
                             </td>
 
-                            <td className="py-3.5 px-3 text-center">
+                            <td className="py-3 px-2 text-center">
                               {isExpired ? (
-                                <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-bold text-rose-500 border border-rose-500/20">Expired</span>
+                                <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-black text-rose-400 border border-rose-500/20">Expired</span>
                               ) : !k.is_active ? (
-                                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-500 border border-amber-500/20">Paused</span>
+                                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-400 border border-amber-500/20">Paused</span>
                               ) : k.requests_used >= k.request_limit ? (
-                                <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-xs font-bold text-purple-500 border border-purple-500/20">Limit Reached</span>
+                                <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] font-black text-purple-400 border border-purple-500/20">Exhausted</span>
                               ) : (
-                                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-500 border border-emerald-500/20">Active</span>
+                                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black text-emerald-400 border border-emerald-500/20">Active</span>
                               )}
                             </td>
 
-                            <td className="py-3.5 px-3 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
+                            <td className="py-3 px-2 text-right">
+                              <div className="flex items-center justify-end gap-1">
                                 <button
                                   onClick={() => handleRenewKey(k.id, k.client_name)}
-                                  className="px-2 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg text-xs font-bold transition border border-emerald-500/20"
+                                  className="px-2 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black transition border border-emerald-500/20"
                                 >
                                   Renew
                                 </button>
                                 <button
                                   onClick={() => handleTogglePauseKey(k.id)}
-                                  className="px-2 py-1 bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white rounded-lg text-xs font-bold transition border border-amber-500/20"
+                                  className="px-2 py-1 bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white rounded-lg text-[10px] font-black transition border border-amber-500/20"
                                 >
                                   {k.is_active ? 'Pause' : 'Resume'}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteApiKey(k.id, k.client_name)}
-                                  className="px-2 py-1 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg text-xs font-bold transition border border-rose-500/20"
+                                  className="px-2 py-1 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black transition border border-rose-500/20"
                                 >
                                   Delete
                                 </button>
@@ -418,9 +420,9 @@ function AdminSubscriptionsPage() {
             </div>
           </div>
 
-          {/* Integration Guide Code */}
+          {/* Integration Instructions */}
           <div className={cardClass}>
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 mb-2">💻 Share This Integration Code With Your Client</h3>
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-300 mb-2">💻 Share This Integration Code With Your Client</h3>
             <div className="flex gap-2 mb-3">
               <button onClick={() => setCodeLang('js')} className={`px-3 py-1 rounded-lg text-xs font-bold ${codeLang === 'js' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>JavaScript</button>
               <button onClick={() => setCodeLang('curl')} className={`px-3 py-1 rounded-lg text-xs font-bold ${codeLang === 'curl' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>cURL</button>
@@ -445,7 +447,7 @@ print(res.json())`}
         </div>
       )}
 
-      {/* TAB 2: USER PAYMENT ACTIVITY (Original) */}
+      {/* TAB 2: USER PAYMENT ACTIVITY */}
       {activeTab === 'billing' && (
         <div className="space-y-6">
           {billingMessage ? (
@@ -472,13 +474,13 @@ print(res.json())`}
           <div className={cardClass}>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-xl font-black">Payment Activity</h2>
-                <p className={`text-sm font-semibold ${mutedText}`}>Clicked means user opened Razorpay checkout but payment is not completed yet.</p>
+                <h2 className="text-base font-black uppercase tracking-wider">Payment Activity</h2>
+                <p className={`text-xs font-semibold ${mutedText}`}>Clicked means user opened Razorpay checkout but payment is not completed yet.</p>
               </div>
               <select
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
-                className={`rounded-xl border px-4 py-2 text-sm font-bold ${isDark ? 'border-slate-700 bg-slate-950 text-white' : 'border-slate-200 bg-white text-slate-900'}`}
+                className={`rounded-xl border px-4 py-2 text-xs font-bold ${isDark ? 'border-slate-700 bg-slate-950 text-white' : 'border-slate-200 bg-white text-slate-900'}`}
               >
                 <option value="all">All Payments</option>
                 <option value="paid">Paid</option>
@@ -488,7 +490,7 @@ print(res.json())`}
             </div>
 
             <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[980px] text-left text-sm">
+              <table className="w-full text-left text-xs">
                 <thead className={isDark ? 'text-slate-400' : 'text-slate-500'}>
                   <tr className="border-b border-slate-200/20">
                     <th className="py-3 pr-4 text-[10px] font-black uppercase tracking-widest">User</th>
@@ -530,7 +532,7 @@ print(res.json())`}
                   ))}
                   {!loadingBilling && filteredPayments.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className={`py-10 text-center text-sm font-bold ${mutedText}`}>
+                      <td colSpan="7" className={`py-10 text-center text-xs font-bold ${mutedText}`}>
                         No payment records found.
                       </td>
                     </tr>
