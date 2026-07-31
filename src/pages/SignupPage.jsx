@@ -43,7 +43,7 @@ const countryFlags = {
 const getCountryFlag = (country) => {
   const name = (country || '').trim().toLowerCase()
   if (!name) return 'globe'
-  
+
   const matchedKey = Object.keys(countryFlags).find((key) => name.includes(key))
   if (matchedKey) {
     const code = countryFlags[matchedKey]
@@ -97,7 +97,7 @@ function SignupPage() {
   const handlePhoneChange = (val) => {
     const normalizedCountry = form.country.trim().toLowerCase()
     const matchedKey = Object.keys(countryCodes).find((k) => normalizedCountry.includes(k))
-    
+
     if (matchedKey) {
       const code = countryCodes[matchedKey]
       let maxDigits = 10
@@ -106,24 +106,24 @@ function SignupPage() {
       } else if (matchedKey === 'germany') {
         maxDigits = 11
       }
-      
+
       const valNoSpace = val.replace(/\s+/g, '')
       const codeNoSpace = code.replace(/\s+/g, '')
-      
+
       if (valNoSpace.startsWith(codeNoSpace)) {
         const remaining = valNoSpace.slice(codeNoSpace.length)
         const digitsOnly = remaining.replace(/\D/g, '')
-        
+
         if (digitsOnly.length > maxDigits) {
           return
         }
-        
+
         const formatted = digitsOnly.length > 0 ? `${code} ${digitsOnly}` : `${code} `
         update('phone', formatted)
         return
       }
     }
-    
+
     update('phone', val.slice(0, 16))
   }
 
@@ -284,39 +284,39 @@ function SignupPage() {
             </div>
           </div>
 
-        <label className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200/15 bg-black/20 p-3.5 text-sm font-bold text-slate-200">
-          <input
-            type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-400"
-            checked={form.acceptedTerms}
-            onChange={(e) => update('acceptedTerms', e.target.checked)}
-          />
-          <span>
-            I accept the{' '}
-            <Link className="text-amber-200" to="/terms-and-conditions">
-              Terms and Conditions
+          <label className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200/15 bg-black/20 p-3.5 text-sm font-bold text-slate-200">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-400"
+              checked={form.acceptedTerms}
+              onChange={(e) => update('acceptedTerms', e.target.checked)}
+            />
+            <span>
+              I accept the{' '}
+              <Link className="text-amber-200" to="/terms-and-conditions">
+                Terms and Conditions
+              </Link>
+            </span>
+          </label>
+
+          <button
+            type="submit"
+            className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#7c2cff] via-[#b65cff] to-[#ffb21a] py-3 text-[14px] font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-violet-950/40 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={loading}
+          >
+            {loading ? 'Creating account...' : 'Create My Account'}
+          </button>
+          {error ? (
+            <p className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-2 text-center text-xs font-bold text-rose-200">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="mt-5 flex flex-col items-center justify-center gap-3 border-t border-white/10 pt-4 text-sm font-bold text-slate-300 sm:flex-row sm:gap-6">
+            <Link to="/login" className="text-amber-200">
+              Already have an account?
             </Link>
-          </span>
-        </label>
-
-        <button
-          type="submit"
-          className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#7c2cff] via-[#b65cff] to-[#ffb21a] py-3 text-[14px] font-black uppercase tracking-[0.16em] text-white shadow-xl shadow-violet-950/40 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={loading}
-        >
-          {loading ? 'Creating account...' : 'Create My Account'}
-        </button>
-        {error ? (
-          <p className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-2 text-center text-xs font-bold text-rose-200">
-            {error}
-          </p>
-        ) : null}
-
-        <div className="mt-5 flex flex-col items-center justify-center gap-3 border-t border-white/10 pt-4 text-sm font-bold text-slate-300 sm:flex-row sm:gap-6">
-          <Link to="/login" className="text-amber-200">
-            Already have an account?
-          </Link>
-        </div>
+          </div>
         </form>
       </section>
     </main>
