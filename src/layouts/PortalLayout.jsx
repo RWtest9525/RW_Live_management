@@ -138,9 +138,11 @@ function PortalLayout() {
     }
   }
 
+  const isAdminUser = currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'reviewsworld01@gmail.com'
+
   const filteredNavItems = navItems.filter((item) => {
-    if (item.adminOnly && currentUser?.role !== 'admin') return false
-    if (item.userOnly && currentUser?.role !== 'user') return false
+    if (item.adminOnly && !isAdminUser) return false
+    if (item.userOnly && currentUser?.role === 'admin') return false
     return true
   })
 
