@@ -83,7 +83,7 @@ const distDir = path.join(__dirname, 'dist')
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir))
   app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+    if (req.method === 'GET' && !req.path.startsWith('/api/') && req.path !== '/api') {
       return res.sendFile(path.join(distDir, 'index.html'))
     }
     next()

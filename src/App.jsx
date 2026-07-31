@@ -62,6 +62,7 @@ function App() {
         <Route path="/password-requests" element={<PasswordRequestsPage />} />
         <Route path="/admin-maintenance" element={<AdminMaintenancePage />} />
         <Route path="/api-management" element={<ApiManagementPage />} />
+        <Route path="/api-keys" element={<ApiManagementPage />} />
         <Route path="/support/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/app/:id" element={<AppDetailPage />} />
       </Route>
