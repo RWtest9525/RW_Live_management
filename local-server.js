@@ -82,7 +82,7 @@ app.get('/api/download-excel', adaptHandler(excelHandler))
 const distDir = path.join(__dirname, 'dist')
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir))
-  app.get('*any', (req, res) => {
+  app.get('*', (req, res) => {
     res.sendFile(path.join(distDir, 'index.html'))
   })
   console.log(`Serving static files from: ${distDir}`)
