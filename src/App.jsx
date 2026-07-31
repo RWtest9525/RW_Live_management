@@ -19,6 +19,7 @@ import PasswordRequestsPage from './pages/PasswordRequestsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import RecordPage from './pages/RecordPage'
 import AdminMaintenancePage from './pages/AdminMaintenancePage'
+import ApiManagementPage from './pages/ApiManagementPage'
 import usePortalStore from './store/usePortalStore'
 
 function App() {
@@ -60,6 +61,7 @@ function App() {
         <Route path="/clients" element={<ClientManagementPage />} />
         <Route path="/password-requests" element={<PasswordRequestsPage />} />
         <Route path="/admin-maintenance" element={<AdminMaintenancePage />} />
+        <Route path="/api-management" element={<ApiManagementPage />} />
         <Route path="/support/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/app/:id" element={<AppDetailPage />} />
       </Route>
