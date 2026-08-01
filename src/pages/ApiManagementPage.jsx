@@ -451,24 +451,36 @@ function ApiManagementPage() {
         </form>
 
         {/* Live Status Indicators */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/40 text-xs">
+        <div className={`grid grid-cols-2 gap-3 sm:grid-cols-4 p-3.5 rounded-2xl border text-xs transition-all ${
+          isDark ? 'bg-slate-950/80 border-slate-800/60 text-slate-300' : 'bg-slate-100/90 border-slate-200 text-slate-700'
+        }`}>
           <div>
-            <span className="text-[10px] font-black uppercase text-slate-500 block">Health Status</span>
-            <span className="font-bold text-slate-200">{connection.healthStatus || 'Unknown'}</span>
+            <span className={`text-[10px] font-black uppercase block tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Health Status
+            </span>
+            <span className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
+              {connection.healthStatus || 'Unknown'}
+            </span>
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase text-slate-500 block">Last Connected</span>
-            <span className="font-bold text-slate-200">
+            <span className={`text-[10px] font-black uppercase block tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Last Connected
+            </span>
+            <span className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
               {connection.lastConnected ? new Date(connection.lastConnected).toLocaleTimeString() : 'Never'}
             </span>
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase text-slate-500 block">Response Time</span>
-            <span className="font-bold text-indigo-400">{connection.responseTimeMs || 0} ms</span>
+            <span className={`text-[10px] font-black uppercase block tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Response Time
+            </span>
+            <span className="font-bold text-indigo-500">{connection.responseTimeMs || 0} ms</span>
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase text-slate-500 block">Next Auto Sync</span>
-            <span className="font-bold text-emerald-400">
+            <span className={`text-[10px] font-black uppercase block tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Next Auto Sync
+            </span>
+            <span className="font-bold text-emerald-500">
               {connection.nextSync ? new Date(connection.nextSync).toLocaleTimeString() : 'In 5 mins'}
             </span>
           </div>
