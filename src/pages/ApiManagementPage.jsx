@@ -321,25 +321,16 @@ function ApiManagementPage() {
           >
             🔄 Refresh
           </button>
-          
-          <a
-            href={`${hfSpaceUrl}/admin`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700 shadow-md shadow-blue-900/20 transition"
-          >
-            <span>Python Admin UI ↗</span>
-          </a>
         </div>
       </div>
 
       {/* Alert Message */}
       {message.text && (
         <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center justify-between transition-all ${
-          message.type === 'error' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+          message.type === 'error' ? 'bg-rose-500/10 text-rose-600 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'
         }`}>
           <span>{message.text}</span>
-          <button onClick={() => setMessage({ text: '', type: '' })} className="font-black px-2">✕</button>
+          <button onClick={() => setMessage({ text: '', type: '' })} className="font-black px-2 hover:opacity-80">✕</button>
         </div>
       )}
 
@@ -588,7 +579,7 @@ function ApiManagementPage() {
 
           {/* Table Main Column */}
           <div className={`lg:col-span-8 ${cardClass}`}>
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800/40">
+            <div className={`flex items-center justify-between mb-4 pb-3 border-b ${isDark ? 'border-slate-800/40' : 'border-slate-200'}`}>
               <h2 className={`text-base font-black uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 Client Subscriptions & Keys
               </h2>
@@ -606,7 +597,7 @@ function ApiManagementPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="text-[10px] font-black uppercase text-slate-400 border-b border-slate-800/40">
+                  <thead className={`text-[10px] font-black uppercase border-b ${isDark ? 'text-slate-400 border-slate-800/40' : 'text-slate-500 border-slate-200'}`}>
                     <tr>
                       <th className="pb-3 px-2">Client</th>
                       <th className="pb-3 px-2">API Key</th>
@@ -616,40 +607,40 @@ function ApiManagementPage() {
                       <th className="pb-3 px-2 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/40 font-semibold">
+                  <tbody className={`divide-y font-semibold ${isDark ? 'divide-slate-800/40' : 'divide-slate-200'}`}>
                     {keys.map((k) => {
                       const pct = Math.round((k.requests_used / k.request_limit) * 100)
                       const isExpired = new Date(k.expiry_date) < new Date()
 
                       return (
-                        <tr key={k.id} className="hover:bg-slate-800/20 transition">
+                        <tr key={k.id} className={`transition ${isDark ? 'hover:bg-slate-800/20' : 'hover:bg-slate-50'}`}>
                           <td className="py-3 px-2">
-                            <div className="font-bold text-slate-100">{k.client_name}</div>
-                            <span className="text-[9px] font-bold text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded">{k.subscription_plan}</span>
+                            <div className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{k.client_name}</div>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${isDark ? 'text-slate-400 bg-slate-800/80' : 'text-slate-600 bg-slate-100 border border-slate-200'}`}>{k.subscription_plan}</span>
                           </td>
 
                           <td className="py-3 px-2 font-mono text-[11px]">
-                            <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 px-2 py-1 rounded-lg w-fit">
-                              <span className="text-indigo-300">{k.api_key.slice(0, 10)}...{k.api_key.slice(-4)}</span>
-                              <button onClick={() => copyToClipboard(k.api_key)} className="text-slate-400 hover:text-white ml-1">📋</button>
+                            <div className={`flex items-center gap-1 border px-2 py-1 rounded-lg w-fit ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
+                              <span className={`font-mono text-[11px] ${isDark ? 'text-indigo-300' : 'text-indigo-600'}`}>{k.api_key.slice(0, 10)}...{k.api_key.slice(-4)}</span>
+                              <button onClick={() => copyToClipboard(k.api_key)} className={`ml-1 transition ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}>📋</button>
                             </div>
                           </td>
 
                           <td className="py-3 px-2 min-w-[120px]">
                             <div className="flex justify-between text-[11px] font-bold mb-1">
-                              <span>{k.requests_used}/{k.request_limit}</span>
-                              <span className={pct >= 100 ? 'text-rose-400' : pct >= 80 ? 'text-amber-400' : 'text-emerald-400'}>{pct}%</span>
+                              <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>{k.requests_used}/{k.request_limit >= 999999000 ? 'Unlimited' : k.request_limit}</span>
+                              <span className={pct >= 100 ? 'text-rose-400' : pct >= 80 ? 'text-amber-400' : 'text-emerald-400'}>{k.request_limit >= 999999000 ? '0%' : `${pct}%`}</span>
                             </div>
-                            <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                            <div className={`w-full rounded-full h-1.5 overflow-hidden border ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-200 border-slate-300'}`}>
                               <div
                                 className={`h-1.5 transition-all ${pct >= 100 ? 'bg-rose-500' : pct >= 80 ? 'bg-amber-500' : 'bg-blue-500'}`}
-                                style={{ width: `${Math.min(pct, 100)}%` }}
+                                style={{ width: `${k.request_limit >= 999999000 ? 5 : Math.min(pct, 100)}%` }}
                               />
                             </div>
                           </td>
 
                           <td className="py-3 px-2 text-[11px]">
-                            <div className="font-bold text-slate-300">{new Date(k.expiry_date).toLocaleDateString()}</div>
+                            <div className={`font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{new Date(k.expiry_date).toLocaleDateString()}</div>
                           </td>
 
                           <td className="py-3 px-2 text-center">
@@ -657,7 +648,7 @@ function ApiManagementPage() {
                               <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-black text-rose-400 border border-rose-500/20">Expired</span>
                             ) : !k.is_active ? (
                               <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-400 border border-amber-500/20">Paused</span>
-                            ) : k.requests_used >= k.request_limit ? (
+                            ) : k.requests_used >= k.request_limit && k.request_limit < 999999000 ? (
                               <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] font-black text-purple-400 border border-purple-500/20">Exhausted</span>
                             ) : (
                               <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black text-emerald-400 border border-emerald-500/20">Active</span>
@@ -668,19 +659,19 @@ function ApiManagementPage() {
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => handleRenew(k.id, k.client_name)}
-                                className="px-2 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black transition border border-emerald-500/20"
+                                className="px-2 py-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black transition border border-emerald-500/20"
                               >
                                 Renew
                               </button>
                               <button
                                 onClick={() => handleTogglePause(k.id)}
-                                className="px-2 py-1 bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white rounded-lg text-[10px] font-black transition border border-amber-500/20"
+                                className="px-2 py-1 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white rounded-lg text-[10px] font-black transition border border-amber-500/20"
                               >
                                 {k.is_active ? 'Pause' : 'Resume'}
                               </button>
                               <button
                                 onClick={() => handleDelete(k.id, k.client_name)}
-                                className="px-2 py-1 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black transition border border-rose-500/20"
+                                className="px-2 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black transition border border-rose-500/20"
                               >
                                 Delete
                               </button>

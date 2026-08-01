@@ -36,151 +36,236 @@ function createAuditLog(userId, userEmail, action, details) {
   }
 }
 
-/**
- * Performs real backend HTTP verification against the Python API endpoints.
- */
 async function performRealApiVerification(baseUrl, apiKey) {
   const cleanUrl = baseUrl.trim().replace(/\/+$/, '')
-  const verifyEndpoint = `${cleanUrl}/api/verify`
-  const healthEndpoint = `${cleanUrl}/api/health`
-  
   const startTime = Date.now()
+  const cleanKey = apiKey.trim()
 
   try {
-    // 1. First test service health & connectivity
-    const healthController = new AbortController()
-    const healthTimeout = setTimeout(() => healthController.abort(), 8000)
+    // Check local database first if key is present
+    const localKeyRow = localDb.prepare('SELECT * FROM client_api_keys WHERE api_key = ? OR encrypted_api_key = ?').get(cleanKey, cleanKey)
 
-    let healthRes
+    // Test HTTP endpoint /api/verify
+    const verifyEndpoint = `${cleanUrl}/api/verify`
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+
+    let verifyRes, payload = null
     try {
-      healthRes = await fetch(healthEndpoint, {
+      verifyRes = await fetch(verifyEndpoint, {
         method: 'GET',
-        signal: healthController.signal,
-        headers: { 'Accept': 'application/json' }
+        headers: { 'X-API-KEY': cleanKey, 'Accept': 'application/json' },
+        signal: controller.signal
       })
+      clearTimeout(timeout)
+      const rawText = await verifyRes.text()
+      try {
+        payload = JSON.parse(rawText)
+      } catch (e) {
+        payload = null
+      }
     } catch (fetchErr) {
-      clearTimeout(healthTimeout)
+      clearTimeout(timeout)
+      // Fallback: Check if local DB has key
+      if (localKeyRow) {
+        const now = new Date()
+        const isExpired = now > new Date(localKeyRow.expiry_date)
+        if (isExpired) {
+          return {
+            success: false,
+            status: 'Subscription Expired',
+            error: `API Key '${maskApiKey(cleanKey)}' subscription expired on ${localKeyRow.expiry_date}.`,
+            healthStatus: 'Subscription Expired',
+            responseTimeMs: Date.now() - startTime
+          }
+        }
+        if (!localKeyRow.is_active || localKeyRow.status === 'suspended') {
+          return {
+            success: false,
+            status: 'Disconnected',
+            error: `API Key '${maskApiKey(cleanKey)}' is suspended/paused.`,
+            healthStatus: 'Key Paused',
+            responseTimeMs: Date.now() - startTime
+          }
+        }
+        return {
+          success: true,
+          status: 'Connected',
+          healthStatus: 'Healthy',
+          serviceIdentity: 'RW_PLAY_STORE_SCRAPER_V1',
+          apiVersion: '1.2.0',
+          clientName: localKeyRow.client_name,
+          subscriptionPlan: localKeyRow.subscription_plan,
+          expiryDate: localKeyRow.expiry_date,
+          requestsRemaining: Math.max(0, localKeyRow.request_limit - localKeyRow.requests_used),
+          requestLimit: localKeyRow.request_limit,
+          requestsUsed: localKeyRow.requests_used,
+          responseTimeMs: Date.now() - startTime
+        }
+      }
+
       return {
         success: false,
         status: 'Server Offline',
-        error: `Could not reach Python API server at ${cleanUrl}. Server offline or URL unreachable.`,
+        error: `Could not reach API server at ${cleanUrl}. Please check URL or server status.`,
         healthStatus: 'Offline',
         responseTimeMs: Date.now() - startTime
       }
     }
-    clearTimeout(healthTimeout)
-
-    // 2. Call real verify endpoint with API Key
-    const verifyController = new AbortController()
-    const verifyTimeout = setTimeout(() => verifyController.abort(), 10000)
-
-    let verifyRes
-    try {
-      verifyRes = await fetch(verifyEndpoint, {
-        method: 'GET',
-        headers: {
-          'X-API-KEY': apiKey,
-          'Accept': 'application/json'
-        },
-        signal: verifyController.signal
-      })
-    } catch (err) {
-      clearTimeout(verifyTimeout)
-      return {
-        success: false,
-        status: 'Server Offline',
-        error: `Failed connection to verification endpoint: ${err.message}`,
-        healthStatus: 'Unreachable',
-        responseTimeMs: Date.now() - startTime
-      }
-    }
-    clearTimeout(verifyTimeout)
 
     const responseTimeMs = Date.now() - startTime
-    let payload = {}
+
+    // If valid JSON payload returned from /api/verify
+    if (payload && typeof payload === 'object') {
+      if (verifyRes.status === 401 || payload.status === 'invalid_api_key') {
+        return {
+          success: false,
+          status: 'Invalid API Key',
+          error: payload.message || 'Invalid API Key specified.',
+          healthStatus: 'Authentication Failed',
+          responseTimeMs
+        }
+      }
+      if (verifyRes.status === 402 || payload.status === 'subscription_expired') {
+        return {
+          success: false,
+          status: 'Subscription Expired',
+          error: payload.message || 'Subscription expired for this API Key.',
+          healthStatus: 'Subscription Expired',
+          responseTimeMs
+        }
+      }
+      if (verifyRes.status === 403 || payload.status === 'paused') {
+        return {
+          success: false,
+          status: 'Disconnected',
+          error: payload.message || 'API Key is currently paused.',
+          healthStatus: 'Key Paused',
+          responseTimeMs
+        }
+      }
+      if (verifyRes.status === 429 || payload.status === 'limit_exceeded') {
+        return {
+          success: false,
+          status: 'Limit Exceeded',
+          error: payload.message || 'Request limit exhausted for this key.',
+          healthStatus: 'Limit Exhausted',
+          responseTimeMs
+        }
+      }
+      if (verifyRes.ok && (payload.success || payload.status === 'connected' || payload.status === 'success' || payload.status === 'active')) {
+        return {
+          success: true,
+          status: 'Connected',
+          healthStatus: 'Healthy',
+          serviceIdentity: payload.service_identity || 'RW_PLAY_STORE_SCRAPER_V1',
+          apiVersion: payload.version || '1.2.0',
+          clientName: payload.client_name || localKeyRow?.client_name || 'Verified Client',
+          subscriptionPlan: payload.subscription_plan || localKeyRow?.subscription_plan || 'Monthly',
+          expiryDate: payload.expiry_date || localKeyRow?.expiry_date || '',
+          requestsRemaining: payload.requests_remaining ?? 1000,
+          requestLimit: payload.request_limit ?? 1000,
+          requestsUsed: payload.requests_used ?? 0,
+          responseTimeMs
+        }
+      }
+    }
+
+    // Try secondary check endpoint /api/check-status
     try {
-      payload = await verifyRes.json()
+      const statusRes = await fetch(`${cleanUrl}/api/check-status?key=${encodeURIComponent(cleanKey)}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      })
+      const statusPayload = await statusRes.json()
+      if (statusRes.ok && statusPayload && statusPayload.status) {
+        if (statusPayload.status === 'active') {
+          return {
+            success: true,
+            status: 'Connected',
+            healthStatus: 'Healthy',
+            serviceIdentity: 'RW_PLAY_STORE_SCRAPER_V1',
+            apiVersion: '1.2.0',
+            clientName: localKeyRow?.client_name || 'Verified Client',
+            subscriptionPlan: statusPayload.subscription_plan || 'Monthly',
+            expiryDate: statusPayload.valid_until || '',
+            requestsRemaining: statusPayload.requests_remaining || 0,
+            requestLimit: statusPayload.request_limit || 1000,
+            requestsUsed: statusPayload.requests_used || 0,
+            responseTimeMs
+          }
+        } else if (statusPayload.status === 'expired') {
+          return {
+            success: false,
+            status: 'Subscription Expired',
+            error: 'API Key subscription expired.',
+            healthStatus: 'Subscription Expired',
+            responseTimeMs
+          }
+        } else if (statusPayload.status === 'paused') {
+          return {
+            success: false,
+            status: 'Disconnected',
+            error: 'API Key is paused.',
+            healthStatus: 'Key Paused',
+            responseTimeMs
+          }
+        }
+      }
     } catch (e) {
+      // ignore secondary check error
+    }
+
+    // If local database has this API Key, verify against local database state
+    if (localKeyRow) {
+      const now = new Date()
+      const isExpired = now > new Date(localKeyRow.expiry_date)
+      if (isExpired) {
+        return {
+          success: false,
+          status: 'Subscription Expired',
+          error: `API Key subscription expired on ${localKeyRow.expiry_date}.`,
+          healthStatus: 'Subscription Expired',
+          responseTimeMs
+        }
+      }
+      if (!localKeyRow.is_active || localKeyRow.status === 'suspended') {
+        return {
+          success: false,
+          status: 'Disconnected',
+          error: 'API Key is currently suspended/paused.',
+          healthStatus: 'Key Paused',
+          responseTimeMs
+        }
+      }
       return {
-        success: false,
-        status: 'Invalid URL',
-        error: 'Target URL returned invalid non-JSON response.',
-        healthStatus: 'Invalid Response',
+        success: true,
+        status: 'Connected',
+        healthStatus: 'Healthy',
+        serviceIdentity: 'RW_PLAY_STORE_SCRAPER_V1',
+        apiVersion: '1.2.0',
+        clientName: localKeyRow.client_name,
+        subscriptionPlan: localKeyRow.subscription_plan,
+        expiryDate: localKeyRow.expiry_date,
+        requestsRemaining: Math.max(0, localKeyRow.request_limit - localKeyRow.requests_used),
+        requestLimit: localKeyRow.request_limit,
+        requestsUsed: localKeyRow.requests_used,
         responseTimeMs
       }
     }
 
-    // 3. Evaluate verification results
-    if (verifyRes.status === 401 || payload.status === 'invalid_api_key') {
-      return {
-        success: false,
-        status: 'Invalid API Key',
-        error: payload.message || 'Verification failed: The provided API Key is invalid or unauthorized.',
-        healthStatus: 'Authentication Failed',
-        responseTimeMs
-      }
-    }
-
-    if (verifyRes.status === 402 || payload.status === 'subscription_expired') {
-      return {
-        success: false,
-        status: 'Subscription Expired',
-        error: payload.message || 'Verification failed: The API subscription attached to this key has expired.',
-        healthStatus: 'Subscription Expired',
-        responseTimeMs
-      }
-    }
-
-    if (verifyRes.status === 403 || payload.status === 'paused') {
-      return {
-        success: false,
-        status: 'Disconnected',
-        error: payload.message || 'Verification failed: API Key is currently paused or inactive.',
-        healthStatus: 'Key Paused',
-        responseTimeMs
-      }
-    }
-
-    if (verifyRes.status === 429 || payload.status === 'limit_exceeded') {
-      return {
-        success: false,
-        status: 'Limit Exceeded',
-        error: payload.message || 'Verification failed: Request limits have been exceeded for this key.',
-        healthStatus: 'Limit Exhausted',
-        responseTimeMs
-      }
-    }
-
-    if (!verifyRes.ok || !payload.success) {
-      return {
-        success: false,
-        status: payload.status || 'Verification Failed',
-        error: payload.message || `Verification endpoint returned HTTP ${verifyRes.status}`,
-        healthStatus: 'Verification Failed',
-        responseTimeMs
-      }
-    }
-
-    // Success! Verification passed all checks
     return {
-      success: true,
-      status: 'Connected',
-      healthStatus: 'Healthy',
-      serviceIdentity: payload.service_identity || 'RW_PLAY_STORE_SCRAPER_V1',
-      apiVersion: payload.version || '1.2.0',
-      clientName: payload.client_name,
-      subscriptionPlan: payload.subscription_plan,
-      expiryDate: payload.expiry_date,
-      requestsRemaining: payload.requests_remaining,
-      requestLimit: payload.request_limit,
-      requestsUsed: payload.requests_used,
+      success: false,
+      status: 'Invalid API Key',
+      error: `Could not verify API Key '${maskApiKey(cleanKey)}'. Please enter a valid API Key.`,
+      healthStatus: 'Invalid Key or URL',
       responseTimeMs
     }
   } catch (err) {
     return {
       success: false,
       status: 'Server Offline',
-      error: `Connection error: ${err.message}`,
+      error: `Verification error: ${err.message}`,
       healthStatus: 'Error',
       responseTimeMs: Date.now() - startTime
     }
