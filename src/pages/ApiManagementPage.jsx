@@ -46,9 +46,108 @@ function ApiManagementPage() {
     }
   }
 
+  // State for API Base URL & API Key connection verification
+  const [connection, setConnection] = useState({
+    baseUrl: '',
+    apiKey: '',
+    status: 'Disconnected',
+    healthStatus: 'Not Configured',
+    lastConnected: null,
+    lastSync: null,
+    nextSync: null,
+    responseTimeMs: 0,
+    maskedApiKey: ''
+  })
+  const [inputUrl, setInputUrl] = useState('')
+  const [inputApiKey, setInputApiKey] = useState('')
+  const [verifyingConn, setVerifyingConn] = useState(false)
+
+  const fetchConnStatus = async () => {
+    try {
+      const res = await fetch('/api/verify-connections')
+      const data = await res.json()
+      if (data.success && data.connection) {
+        setConnection(data.connection)
+        if (data.connection.baseUrl && !inputUrl) setInputUrl(data.connection.baseUrl)
+      }
+    } catch (err) {
+      console.error('Error loading connection status:', err)
+    }
+  }
+
   useEffect(() => {
     void fetchKeys()
+    void fetchConnStatus()
   }, [])
+
+  const handleVerifyAndConnect = async (e) => {
+    e.preventDefault()
+    if (!inputUrl.trim() || !inputApiKey.trim()) return
+
+    setVerifyingConn(true)
+    setMessage({ text: 'Verifying API credentials with real backend...', type: '' })
+
+    try {
+      const res = await fetch('/api/verify-connections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify', baseUrl: inputUrl.trim(), apiKey: inputApiKey.trim() })
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        setMessage({ text: data.message || 'API Connection verified and saved successfully!', type: 'success' })
+        setInputApiKey('')
+        fetchConnStatus()
+      } else {
+        setMessage({ text: `Connection Failed (${data.status}): ${data.error}`, type: 'error' })
+        fetchConnStatus()
+      }
+    } catch (err) {
+      setMessage({ text: 'Network error verifying connection to Python API backend', type: 'error' })
+    } finally {
+      setVerifyingConn(false)
+    }
+  }
+
+  const handleRetryConnection = async () => {
+    setMessage({ text: 'Retrying connection health check...', type: '' })
+    try {
+      const res = await fetch('/api/connection-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'retry' })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setMessage({ text: data.message, type: 'success' })
+      } else {
+        setMessage({ text: `Retry Failed (${data.status}): ${data.error}`, type: 'error' })
+      }
+      fetchConnStatus()
+    } catch (err) {
+      setMessage({ text: 'Failed to trigger connection retry', type: 'error' })
+    }
+  }
+
+  const handleDisconnect = async () => {
+    if (!window.confirm('Are you sure you want to disconnect from this Python API backend?')) return
+    try {
+      const res = await fetch('/api/verify-connections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'disconnect' })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setMessage({ text: 'Disconnected successfully', type: 'success' })
+        fetchConnStatus()
+      }
+    } catch (err) {
+      setMessage({ text: 'Error disconnecting API', type: 'error' })
+    }
+  }
 
   // Action Handlers
   const handleGenerateKey = async (e) => {
@@ -176,6 +275,22 @@ function ApiManagementPage() {
 
   const mutedText = isDark ? 'text-slate-400' : 'text-slate-500'
 
+  const handlePlanChange = (selectedPlan) => {
+    setPlan(selectedPlan)
+    const now = new Date()
+    if (selectedPlan === 'Weekly') {
+      setLimit(200)
+      now.setDate(now.getDate() + 7)
+    } else if (selectedPlan === 'Enterprise') {
+      setLimit(999999999)
+      now.setDate(now.getDate() + 365)
+    } else {
+      setLimit(1000)
+      now.setDate(now.getDate() + 30)
+    }
+    setExpiryDate(now.toISOString().split('T')[0])
+  }
+
   return (
     <section className="space-y-6 pb-16 animate-in fade-in duration-300">
       
@@ -192,7 +307,7 @@ function ApiManagementPage() {
             Play Store Scraper API & Client Keys
           </h1>
           <p className={`mt-1 text-sm font-medium ${mutedText}`}>
-            Manage client subscriptions, generate API keys, set request limits, and renew access.
+            Manage client subscriptions, generate API keys, set request limits (1 limit = 1 API fetch call), and renew access.
           </p>
         </div>
 
@@ -241,13 +356,120 @@ function ApiManagementPage() {
         </div>
 
         <div className={cardClass}>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Requests Consumed</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fetches Consumed</p>
           <p className="mt-2 text-3xl font-black text-indigo-500">{stats.totalReqs.toLocaleString()}</p>
         </div>
 
         <div className={cardClass}>
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Expired / Inactive</p>
           <p className="mt-2 text-3xl font-black text-amber-500">{stats.inactive}</p>
+        </div>
+      {/* REAL API CONNECTION VERIFICATION CARD */}
+      <div className={cardClass}>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-800/40 pb-4 mb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className={`text-base font-black uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                🔌 Live Python API Connection Verification
+              </h2>
+              <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border ${
+                connection.status === 'Connected'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : connection.status === 'Invalid API Key' || connection.status === 'Invalid URL' || connection.status === 'Server Offline'
+                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                  : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+              }`}>
+                {connection.status}
+              </span>
+            </div>
+            <p className={`mt-1 text-xs font-medium ${mutedText}`}>
+              Connect and verify your live Python Scraper API. Connection is strictly saved ONLY after real backend verification succeeds.
+            </p>
+          </div>
+
+          {connection.status === 'Connected' && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRetryConnection}
+                className="px-3 py-2 bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white rounded-xl text-xs font-bold transition border border-blue-500/20"
+              >
+                🔄 Retry Connection
+              </button>
+              <button
+                type="button"
+                onClick={handleDisconnect}
+                className="px-3 py-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-xl text-xs font-bold transition border border-rose-500/20"
+              >
+                ❌ Disconnect
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Form to Input API Base URL & API Key */}
+        <form onSubmit={handleVerifyAndConnect} className="grid grid-cols-1 gap-4 md:grid-cols-12 mb-4">
+          <div className="md:col-span-6">
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">
+              API Base URL
+            </label>
+            <input
+              type="url"
+              required
+              placeholder="e.g. https://yash9525-rw-live-checker.hf.space"
+              value={inputUrl}
+              onChange={(e) => setInputUrl(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div className="md:col-span-4">
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">
+              API Key (X-API-KEY)
+            </label>
+            <input
+              type="password"
+              required={connection.status !== 'Connected'}
+              placeholder={connection.maskedApiKey ? `Saved: ${connection.maskedApiKey}` : 'Enter API Key to verify'}
+              value={inputApiKey}
+              onChange={(e) => setInputApiKey(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div className="md:col-span-2 flex items-end">
+            <button
+              type="submit"
+              disabled={verifyingConn}
+              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-2.5 text-xs font-black text-white uppercase tracking-wider shadow-md transition disabled:opacity-50"
+            >
+              {verifyingConn ? 'Verifying...' : '⚡ Verify & Save'}
+            </button>
+          </div>
+        </form>
+
+        {/* Live Status Indicators */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/40 text-xs">
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 block">Health Status</span>
+            <span className="font-bold text-slate-200">{connection.healthStatus || 'Unknown'}</span>
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 block">Last Connected</span>
+            <span className="font-bold text-slate-200">
+              {connection.lastConnected ? new Date(connection.lastConnected).toLocaleTimeString() : 'Never'}
+            </span>
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 block">Response Time</span>
+            <span className="font-bold text-indigo-400">{connection.responseTimeMs || 0} ms</span>
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 block">Next Auto Sync</span>
+            <span className="font-bold text-emerald-400">
+              {connection.nextSync ? new Date(connection.nextSync).toLocaleTimeString() : 'In 5 mins'}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -306,25 +528,27 @@ function ApiManagementPage() {
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Subscription Plan</label>
                 <select
                   value={plan}
-                  onChange={(e) => setPlan(e.target.value)}
+                  onChange={(e) => handlePlanChange(e.target.value)}
                   className={inputClass}
                 >
-                  <option value="Monthly">Monthly Plan</option>
-                  <option value="Custom">Custom Enterprise Plan</option>
+                  <option value="Weekly">Weekly Plan (₹199 - 200 Fetch Calls / 7 Days)</option>
+                  <option value="Monthly">Monthly Plan (₹999 - 1000 Fetch Calls / 30 Days)</option>
+                  <option value="Enterprise">Enterprise Plan (₹10,000 - Unlimited Fetches / 365 Days)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Monthly Request Limit</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">API Request Fetch Limit</label>
                 <input
                   type="number"
                   required
-                  min="100"
-                  step="500"
+                  min="1"
+                  step="100"
                   value={limit}
                   onChange={(e) => setLimit(e.target.value)}
                   className={inputClass}
                 />
+                <p className="text-[10px] text-slate-400 mt-1 font-medium">1 Limit = 1 API Fetch Call. 5000 means client can perform 5,000 fetch calls.</p>
               </div>
 
               <div>

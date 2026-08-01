@@ -320,6 +320,37 @@ export const startAutomationWorker = () => {
     } catch (err) {
       console.error('CRITICAL: Cron job runScheduledAutomation failed:', err.message)
     }
+
+    // Ping API Connection health
+    try {
+      const conn = localDb.prepare("SELECT * FROM api_connections WHERE id = 'primary' AND status = 'Connected'").get()
+      if (conn) {
+        const verifyEndpoint = `${conn.baseUrl.replace(/\/+$/, '')}/api/health`
+        const startTime = Date.now()
+        const res = await fetch(verifyEndpoint, { method: 'GET', headers: { 'Accept': 'application/json' } })
+        const duration = Date.now() - startTime
+
+        if (res.ok) {
+          localDb.prepare(`
+            UPDATE api_connections
+            SET healthStatus = 'Healthy', responseTimeMs = ?, updatedAt = ?
+            WHERE id = 'primary'
+          `).run(duration, new Date().toISOString())
+        } else {
+          localDb.prepare(`
+            UPDATE api_connections
+            SET healthStatus = 'Degraded', responseTimeMs = ?, updatedAt = ?
+            WHERE id = 'primary'
+          `).run(duration, new Date().toISOString())
+        }
+      }
+    } catch (healthErr) {
+      localDb.prepare(`
+        UPDATE api_connections
+        SET healthStatus = 'Offline', status = 'Server Offline', updatedAt = ?
+        WHERE id = 'primary'
+      `).run(new Date().toISOString())
+    }
   })
 
   cron.schedule('0 0 * * *', async () => {

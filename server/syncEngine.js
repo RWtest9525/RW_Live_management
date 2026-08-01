@@ -164,6 +164,8 @@ export const syncAppReviews = async ({
     await updateAppLocal(appId, { syncProgress: null, syncStatus: status }).catch(() => {})
   }
 
+  const startTime = Date.now()
+
   try {
     await updateAppLocal(appId, {
       syncProgress: -1,
@@ -330,13 +332,12 @@ export const syncAppReviews = async ({
       }
     }
 
-    // 1. Remove reviews outside the listing IST calendar day (not May 6+ when list date is May 5).
+    // 1. Remove reviews outside the listing IST calendar day
     localDb
       .prepare('DELETE FROM reviews WHERE appId = ? AND (date < ? OR date >= ?)')
       .run(id, listStart, listEnd)
 
     // 2. Keep only current sync day bucket for this app.
-    // Older buckets cannot be reliably reconstructed from Play Store snapshots.
     localDb.prepare('DELETE FROM reviews WHERE appId = ? AND reviewDayNumber != ?').run(id, syncDay);
 
     // 3. Upsert current reviews
@@ -380,6 +381,40 @@ export const syncAppReviews = async ({
     listingDay.endIso,
   )
 
+  const durationMs = Date.now() - startTime
+
+  // Log successful sync run into sync_history
+  try {
+    localDb.prepare(`
+      INSERT INTO sync_history (
+        id, appId, packageId, totalFetched, importedCount, droppedCount,
+        durationMs, responseTimeMs, status, errorMessage, triggeredBy, createdAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      `sync_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      appId,
+      packageId,
+      fetchedReviews.length,
+      filteredReviews.length,
+      finalDropKeys.length,
+      durationMs,
+      0,
+      'SUCCESS',
+      null,
+      'system',
+      new Date().toISOString()
+    )
+
+    // Update connection lastSync
+    localDb.prepare(`
+      UPDATE api_connections
+      SET lastSync = ?, nextSync = ?
+      WHERE id = 'primary'
+    `).run(new Date().toISOString(), new Date(Date.now() + 5 * 60 * 1000).toISOString())
+  } catch (logErr) {
+    console.warn('[syncEngine] sync_history log warning:', logErr.message)
+  }
+
   await sleep(2200)
   await clearSyncUi(null)
 
@@ -387,9 +422,50 @@ export const syncAppReviews = async ({
     totalFetched: fetchedReviews.length,
     acceptedAfterFilter: filteredReviews.length,
     droppedCount: finalDropKeys.length,
+    durationMs,
   }
   } catch (err) {
     console.error(`syncAppReviews failed for ${packageId}:`, err.message)
+    const durationMs = Date.now() - startTime
+
+    // Log failure into sync_history and failed_requests
+    try {
+      localDb.prepare(`
+        INSERT INTO sync_history (
+          id, appId, packageId, totalFetched, importedCount, droppedCount,
+          durationMs, responseTimeMs, status, errorMessage, triggeredBy, createdAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        `sync_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        appId,
+        packageId,
+        0, 0, 0,
+        durationMs,
+        0,
+        'FAILED',
+        err.message,
+        'system',
+        new Date().toISOString()
+      )
+
+      localDb.prepare(`
+        INSERT INTO failed_requests (
+          id, appId, packageId, endpoint, errorMessage, retryCount, nextRetryAt, createdAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        `fail_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        appId,
+        packageId,
+        'google-play-scraper',
+        err.message,
+        0,
+        new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        new Date().toISOString()
+      )
+    } catch (e) {
+      console.warn('[syncEngine] error log warning:', e.message)
+    }
+
     await updateAppLocal(appId, {
       syncProgress: null,
       syncStatus: `Sync failed: ${err.message}`,

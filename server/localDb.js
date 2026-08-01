@@ -145,6 +145,83 @@ db.exec(`
     key TEXT PRIMARY KEY,
     value TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS api_connections (
+    id TEXT PRIMARY KEY,
+    baseUrl TEXT NOT NULL,
+    encryptedApiKey TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'Disconnected',
+    lastConnected TEXT,
+    lastSync TEXT,
+    nextSync TEXT,
+    healthStatus TEXT DEFAULT 'Unknown',
+    responseTimeMs INTEGER DEFAULT 0,
+    errorCount INTEGER DEFAULT 0,
+    lastError TEXT,
+    serviceIdentity TEXT,
+    apiVersion TEXT,
+    updatedAt TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS client_api_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_name TEXT NOT NULL,
+    api_key TEXT UNIQUE NOT NULL,
+    encrypted_api_key TEXT,
+    subscription_plan TEXT NOT NULL DEFAULT 'Monthly',
+    start_date TEXT NOT NULL,
+    expiry_date TEXT NOT NULL,
+    request_limit INTEGER NOT NULL DEFAULT 5000,
+    requests_used INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'active',
+    is_active INTEGER NOT NULL DEFAULT 1,
+    last_login TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_client_api_keys_status ON client_api_keys(status, is_active);
+  CREATE INDEX IF NOT EXISTS idx_client_api_keys_expiry ON client_api_keys(expiry_date);
+
+  CREATE TABLE IF NOT EXISTS sync_history (
+    id TEXT PRIMARY KEY,
+    appId TEXT,
+    packageId TEXT,
+    totalFetched INTEGER DEFAULT 0,
+    importedCount INTEGER DEFAULT 0,
+    droppedCount INTEGER DEFAULT 0,
+    durationMs INTEGER DEFAULT 0,
+    responseTimeMs INTEGER DEFAULT 0,
+    status TEXT NOT NULL,
+    errorMessage TEXT,
+    triggeredBy TEXT DEFAULT 'system',
+    createdAt TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_sync_history_appId ON sync_history(appId);
+  CREATE INDEX IF NOT EXISTS idx_sync_history_createdAt ON sync_history(createdAt);
+
+  CREATE TABLE IF NOT EXISTS failed_requests (
+    id TEXT PRIMARY KEY,
+    appId TEXT,
+    packageId TEXT,
+    endpoint TEXT,
+    errorMessage TEXT,
+    retryCount INTEGER DEFAULT 0,
+    nextRetryAt TEXT,
+    createdAt TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_failed_requests_appId ON failed_requests(appId);
+
+  CREATE TABLE IF NOT EXISTS audit_logs (
+    id TEXT PRIMARY KEY,
+    userId TEXT,
+    userEmail TEXT,
+    action TEXT NOT NULL,
+    details TEXT,
+    ip TEXT,
+    createdAt TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+  CREATE INDEX IF NOT EXISTS idx_audit_logs_createdAt ON audit_logs(createdAt);
 `);
 
 db.exec(`

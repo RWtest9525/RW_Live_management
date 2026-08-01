@@ -69,9 +69,46 @@ export const SUBSCRIPTION_PLANS = {
   },
 }
 
+/**
+ * Scraper API Key Subscription Plans & Limits
+ * Request Limit = Maximum Number of API Fetch Calls allowed for the key
+ */
+export const API_SCRAPER_PLANS = {
+  Weekly: {
+    id: 'Weekly',
+    name: 'Weekly Plan',
+    priceInr: 199,
+    durationDays: 7,
+    requestLimit: 200,
+    isUnlimited: false,
+    label: 'Weekly Plan (₹199 - 200 Fetch Calls / 7 Days)',
+    description: '7 Days Access - 200 total API fetch requests allowed',
+  },
+  Monthly: {
+    id: 'Monthly',
+    name: 'Monthly Plan',
+    priceInr: 999,
+    durationDays: 30,
+    requestLimit: 1000,
+    isUnlimited: false,
+    label: 'Monthly Plan (₹999 - 1000 Fetch Calls / 30 Days)',
+    description: '30 Days Access - 1000 total API fetch requests allowed',
+  },
+  Enterprise: {
+    id: 'Enterprise',
+    name: 'Enterprise Plan (Yearly)',
+    priceInr: 10000,
+    durationDays: 365,
+    requestLimit: 999999999,
+    isUnlimited: true,
+    label: 'Enterprise Yearly Plan (₹10,000 - Unlimited Fetches / 365 Days)',
+    description: '365 Days Access - Unlimited API fetch requests allowed',
+  },
+}
+
 export const getSubscriptionPlan = (planId) => SUBSCRIPTION_PLANS[planId] ?? null
 
-export const isUnlimited = (value) => value === null || value === undefined
+export const isUnlimited = (value) => value === null || value === undefined || value >= 999999000
 
 export const formatPlanLimit = (value, suffix = '') =>
   isUnlimited(value) ? 'Unlimited' : `${value}${suffix}`

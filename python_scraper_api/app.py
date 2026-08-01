@@ -149,7 +149,142 @@ def require_api_key(f):
 
 
 # ------------------------------------------------------------------------------
-# 4. CLIENT USAGE CHECK ENDPOINT (Public)
+# 4. API HEALTH, VERIFY, VERSION & STATS ENDPOINTS
+# ------------------------------------------------------------------------------
+APP_VERSION = "1.2.0"
+SERVICE_IDENTITY = "RW_PLAY_STORE_SCRAPER_V1"
+START_TIME = datetime.utcnow()
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Service health endpoint returning backend status and uptime."""
+    uptime_seconds = int((datetime.utcnow() - START_TIME).total_seconds())
+    try:
+        # Simple DB sanity check
+        db_status = "connected"
+        active_keys_count = ClientAPI.query.filter_by(is_active=True).count()
+    except Exception as err:
+        db_status = f"error: {str(err)}"
+        active_keys_count = 0
+
+    return jsonify({
+        "status": "healthy",
+        "service": SERVICE_IDENTITY,
+        "version": APP_VERSION,
+        "uptime_seconds": uptime_seconds,
+        "database": db_status,
+        "active_keys": active_keys_count,
+        "timestamp": datetime.utcnow().isoformat()
+    }), 200
+
+@app.route('/api/version', methods=['GET'])
+def version_check():
+    """Version compatibility endpoint."""
+    return jsonify({
+        "status": "success",
+        "service": SERVICE_IDENTITY,
+        "version": APP_VERSION,
+        "min_compatible_version": "1.0.0",
+        "capabilities": ["play_store_scraping", "api_key_auth", "subscription_tracking"]
+    }), 200
+
+@app.route('/api/verify', methods=['GET', 'POST'])
+def verify_credentials():
+    """
+    Real-time API connection verification endpoint.
+    Checks API key, subscription validity, request limits, and service identity.
+    Used by management backend to validate connection before saving.
+    """
+    api_key = (
+        request.headers.get('X-API-KEY') 
+        or request.args.get('api_key') 
+        or request.args.get('key')
+    )
+    if request.is_json and not api_key:
+        api_key = request.json.get('api_key') or request.json.get('key')
+
+    if not api_key:
+        return jsonify({
+            "success": False,
+            "status": "invalid_api_key",
+            "message": "Missing API Key. Provide header 'X-API-KEY' or query parameter 'key'."
+        }), 400
+
+    client = ClientAPI.query.filter_by(api_key=api_key).first()
+    if not client:
+        return jsonify({
+            "success": False,
+            "status": "invalid_api_key",
+            "message": "Invalid API Key. The specified API Key was not recognized."
+        }), 401
+
+    now = datetime.utcnow()
+    is_expired = now > client.expiry_date
+
+    if is_expired:
+        return jsonify({
+            "success": False,
+            "status": "subscription_expired",
+            "message": "Subscription expired. Please renew access.",
+            "client_name": client.client_name,
+            "expiry_date": client.expiry_date.strftime("%Y-%m-%d")
+        }), 402
+
+    if not client.is_active:
+        return jsonify({
+            "success": False,
+            "status": "paused",
+            "message": "API Key is currently suspended/paused.",
+            "client_name": client.client_name
+        }), 403
+
+    if client.requests_used >= client.request_limit:
+        return jsonify({
+            "success": False,
+            "status": "limit_exceeded",
+            "message": "Monthly request limit exceeded.",
+            "client_name": client.client_name,
+            "request_limit": client.request_limit,
+            "requests_used": client.requests_used
+        }), 429
+
+    return jsonify({
+        "success": True,
+        "status": "connected",
+        "service_identity": SERVICE_IDENTITY,
+        "version": APP_VERSION,
+        "client_id": client.id,
+        "client_name": client.client_name,
+        "subscription_plan": client.subscription_plan,
+        "expiry_date": client.expiry_date.strftime("%Y-%m-%d"),
+        "request_limit": client.request_limit,
+        "requests_used": client.requests_used,
+        "requests_remaining": max(0, client.request_limit - client.requests_used),
+        "verified_at": datetime.utcnow().isoformat()
+    }), 200
+
+@app.route('/api/statistics', methods=['GET'])
+@admin_required
+def get_statistics():
+    """System statistics endpoint for administrative reporting."""
+    clients = ClientAPI.query.all()
+    now = datetime.utcnow()
+    total_clients = len(clients)
+    active_clients = sum(1 for c in clients if c.is_active and now <= c.expiry_date and c.requests_used < c.request_limit)
+    total_requests = sum(c.requests_used for c in clients)
+
+    return jsonify({
+        "status": "success",
+        "service": SERVICE_IDENTITY,
+        "version": APP_VERSION,
+        "total_clients": total_clients,
+        "active_clients": active_clients,
+        "total_requests": total_requests,
+        "timestamp": datetime.utcnow().isoformat()
+    }), 200
+
+# ------------------------------------------------------------------------------
+# 5. CLIENT USAGE CHECK ENDPOINT (Public)
 # ------------------------------------------------------------------------------
 @app.route('/api/check-status', methods=['GET'])
 def check_status():
@@ -358,15 +493,17 @@ ADMIN_HTML_TEMPLATE = """
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Subscription Plan</label>
                         <select name="subscription_plan" class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition">
-                            <option value="Monthly">Monthly Plan</option>
-                            <option value="Custom">Custom Enterprise Plan</option>
+                            <option value="Weekly">Weekly Plan (₹199 - 200 Fetch Calls / 7 Days)</option>
+                            <option value="Monthly" selected>Monthly Plan (₹999 - 1000 Fetch Calls / 30 Days)</option>
+                            <option value="Enterprise">Enterprise Plan (₹10,000 - Unlimited / 365 Days)</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Monthly Request Limit</label>
-                        <input type="number" name="request_limit" value="5000" min="100" step="500" required 
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">API Request Fetch Limit</label>
+                        <input type="number" name="request_limit" value="1000" min="1" step="100" required 
                             class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition">
+                        <p class="text-[10px] text-slate-400 mt-1">1 request limit = 1 API fetch call. Enterprise plan gives unlimited requests.</p>
                     </div>
 
                     <div>
@@ -554,17 +691,39 @@ def admin_dashboard():
 def generate_key():
     client_name = request.form.get('client_name')
     subscription_plan = request.form.get('subscription_plan', 'Monthly')
-    request_limit = int(request.form.get('request_limit', 5000))
     expiry_date_str = request.form.get('expiry_date')
-    
-    expiry_date = datetime.strptime(expiry_date_str, "%Y-%m-%d")
+
+    # Plan defaults
+    now = datetime.utcnow()
+    if subscription_plan == 'Weekly':
+        default_limit = 200
+        default_duration = timedelta(days=7)
+    elif subscription_plan == 'Enterprise':
+        default_limit = 999999999 # Unlimited
+        default_duration = timedelta(days=365)
+    else: # Monthly
+        default_limit = 1000
+        default_duration = timedelta(days=30)
+
+    try:
+        request_limit = int(request.form.get('request_limit', default_limit))
+    except (ValueError, TypeError):
+        request_limit = default_limit
+
+    if expiry_date_str:
+        try:
+            expiry_date = datetime.strptime(expiry_date_str, "%Y-%m-%d")
+        except ValueError:
+            expiry_date = now + default_duration
+    else:
+        expiry_date = now + default_duration
 
     new_client = ClientAPI(
         client_name=client_name,
         subscription_plan=subscription_plan,
         request_limit=request_limit,
         expiry_date=expiry_date,
-        start_date=datetime.utcnow(),
+        start_date=now,
         requests_used=0,
         is_active=True
     )
@@ -580,9 +739,15 @@ def renew_client(client_id):
     client = ClientAPI.query.get_or_404(client_id)
     now = datetime.utcnow()
     
-    # Extend by 30 days from today (or existing expiry if in future)
+    # Check plan type to determine extension days
+    days_to_add = 30
+    if client.subscription_plan == 'Weekly':
+        days_to_add = 7
+    elif client.subscription_plan == 'Enterprise':
+        days_to_add = 365
+
     base_date = max(now, client.expiry_date)
-    client.expiry_date = base_date + timedelta(days=30)
+    client.expiry_date = base_date + timedelta(days=days_to_add)
     client.requests_used = 0
     client.is_active = True
     

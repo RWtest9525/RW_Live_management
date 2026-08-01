@@ -133,8 +133,64 @@ export const updatePasswordRequestStatus = async (id, status) => {
   return response.json()
 }
 
+export const verifyApiConnection = async (baseUrl, apiKey) => {
+  const token = getStoredToken()
+  const response = await fetch('/api/verify-connections', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ action: 'verify', baseUrl, apiKey }),
+  })
+  return response.json()
+}
+
+export const fetchConnectionStatus = async () => {
+  const token = getStoredToken()
+  const response = await fetch('/api/verify-connections', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return response.json()
+}
+
+export const retryConnection = async () => {
+  const token = getStoredToken()
+  const response = await fetch('/api/connection-status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ action: 'retry' }),
+  })
+  return response.json()
+}
+
+export const disconnectConnection = async () => {
+  const token = getStoredToken()
+  const response = await fetch('/api/verify-connections', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ action: 'disconnect' }),
+  })
+  return response.json()
+}
+
+export const fetchSystemLogs = async (type = 'all', limit = 50) => {
+  const token = getStoredToken()
+  const response = await fetch(`/api/system-logs?type=${type}&limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return response.json()
+}
+
 export const subscribeApps = () => {}
 export const subscribeProofs = () => {}
 export const subscribeClients = () => {}
 export const subscribeUsers = () => {}
 export const subscribeReviews = () => {}
+

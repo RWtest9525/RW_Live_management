@@ -297,25 +297,42 @@ function ClientManagementPage() {
                   <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Subscription Plan</label>
                   <select
                     value={planInput}
-                    onChange={(e) => setPlanInput(e.target.value)}
+                    onChange={(e) => {
+                      const selectedPlan = e.target.value
+                      setPlanInput(selectedPlan)
+                      const now = new Date()
+                      if (selectedPlan === 'Weekly') {
+                        setLimitInput(200)
+                        now.setDate(now.getDate() + 7)
+                      } else if (selectedPlan === 'Enterprise') {
+                        setLimitInput(999999999)
+                        now.setDate(now.getDate() + 365)
+                      } else {
+                        setLimitInput(1000)
+                        now.setDate(now.getDate() + 30)
+                      }
+                      setExpiryInput(now.toISOString().split('T')[0])
+                    }}
                     className={inputClass}
                   >
-                    <option value="Monthly">Monthly Plan</option>
-                    <option value="Custom">Custom Enterprise Plan</option>
+                    <option value="Weekly">Weekly Plan (₹199 - 200 Fetch Calls / 7 Days)</option>
+                    <option value="Monthly">Monthly Plan (₹999 - 1000 Fetch Calls / 30 Days)</option>
+                    <option value="Enterprise">Enterprise Plan (₹10,000 - Unlimited / 365 Days)</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Monthly Request Limit</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">API Request Fetch Limit</label>
                   <input
                     type="number"
                     required
-                    min="100"
-                    step="500"
+                    min="1"
+                    step="100"
                     value={limitInput}
                     onChange={(e) => setLimitInput(e.target.value)}
                     className={inputClass}
                   />
+                  <p className="text-[10px] text-slate-400 mt-1">1 limit = 1 API fetch call to /api/reviews.</p>
                 </div>
 
                 <div>
