@@ -364,6 +364,8 @@ function ApiManagementPage() {
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Expired / Inactive</p>
           <p className="mt-2 text-3xl font-black text-amber-500">{stats.inactive}</p>
         </div>
+      </div>
+
       {/* REAL API CONNECTION VERIFICATION CARD */}
       <div className={cardClass}>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-800/40 pb-4 mb-4">
